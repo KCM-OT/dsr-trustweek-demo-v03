@@ -791,10 +791,53 @@ One red herring worth recording: the console history showed
 mid-edit HMR reloads in earlier sessions — `/reports` renders fine now
 (h1 "Reports"). Don't re-fix it.
 
+### 3.5e — v0 preview panel, real cause: no root `package.json`
+
+3.5d's `allowedHosts` fix was necessary but **not sufficient** — the panel
+was still blank. Actual cause: **v0 auto-starts the dev server by looking
+for a `package.json` at the repo root, and there wasn't one** (only
+`src/package.json`). So v0 started nothing, nothing listened on :3000, and
+the panel had no server to proxy. The dev server I'd started by hand in
+3.5d masked this; it died when the **VM restarted**, which is why the
+panel worked briefly and then didn't. `src/node_modules` survives restarts
+(persisted share), but processes do not.
+
+This is the **third** manifestation of one structural fact: *every piece
+of v0/Vercel tooling operates from the repo root and does not know about
+`src/`.* Publish (3.5c), and now the preview dev server.
+
+Fixed with a root `package.json` shim — no deps, just scripts that
+delegate into `src/`:
+
+```json
+"dev":   "cd src && (test -d node_modules || npm ci) && npm run dev",
+"build": "cd src && (test -d node_modules || npm ci) && npm run build"
+```
+
+The `test -d node_modules || npm ci` guard matters: a fresh VM can come up
+without `src/node_modules`, and without it `vite` wouldn't be on PATH and
+the panel would silently fail again the same way.
+
+Deliberately **no root lockfile and no root `node_modules`** — verified
+none were created. The deploy path depends on there being no lockfile at
+the root (that's what makes Vercel pick npm, per 3.5c), so introducing one
+would have re-broken Publish. Root `vercel.json` still overrides install /
+build / output regardless.
+
+Verified: `pnpm dev` at the root brings up Vite on `*:3000`, all spoofed
+Host headers 200 (`v0.app`, `vercel.app`, `vercel.run`), and the app
+renders at 1625x1090 dark with **0 broken images**.
+
 **Open:** the project has SSO deployment protection
 (`all_except_custom_domains`), so every `*.vercel.app` URL demands a
 Vercel team login — a demo audience would hit an auth wall, not the deck.
 Needs either a custom domain or protection relaxed before TrustWeek.
+
+**Structural recommendation:** three separate breakages have now traced to
+the same `src/` nesting, each needing its own shim. Flattening the app to
+the repo root would remove the whole class of problem and let both Publish
+and the preview panel work by default, with no shims to maintain. Worth
+doing before more tooling trips over it.
 
 ## Session 3 original brief (for reference)
 

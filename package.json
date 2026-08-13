@@ -1,0 +1,11 @@
+{
+  "name": "dsr-trustweek-demo",
+  "private": true,
+  "version": "0.0.0",
+  "//": "Root shim. The real app lives in src/. v0's preview panel and Publish both operate from the repo root, so this file exists to give them a dev/build script to find. Without it, nothing listens on :3000 and the preview panel stays blank.",
+  "scripts": {
+    "dev": "cd src && (test -d node_modules || npm ci) && npm run dev",
+    "build": "cd src && (test -d node_modules || npm ci) && npm run build",
+    "preview": "cd src && npm run preview"
+  }
+}
