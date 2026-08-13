@@ -3,6 +3,7 @@ import { tenant, marcus } from '../data/fixtures'
 import { useSceneBeats } from '../cue/CueContext'
 import { StatusPill } from '../components/StatusPill'
 import { GroundingChip } from '../components/GroundingChip'
+import { PageHeader, PageBody, PageAction } from '../shell/PageHeader'
 
 // Reports / Subtasks / Settings — the sidebar items 02 §1 marks "present
 // for authenticity, not part of the demo path." Session 1's stub text

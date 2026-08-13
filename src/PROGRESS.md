@@ -623,6 +623,58 @@ composed strings itemized in S3 notes · dashboard timeframe model +
 composed digests (S4a notes) · PDF composed content + no-footer cover
 (S4b notes) · report viewer lives in-shell (not full-bleed).
 
+## Session 3.5 — Page-header unification (done)
+
+Scope, per the session brief: **visual/fidelity polish on existing scenes
+only.** No new scenes, routes, beats, cue timings, fixture data, or
+authored copy. Every string on screen is unchanged from Session 4 close.
+
+The seam this closes: the Figma page-header refits (Setup, Requests) had
+established a real band — white, 24px padding, optional breadcrumb, 24/32
+title, 14/20 description, full-width `#a9a9a9` divider — but the three
+older surfaces (request detail, redaction, dashboard) plus the module
+pages each had their own near-copy at a **different title size and a
+different gutter**. Walking the deck, titles jumped 22px → 24px → 22px
+and content wells jumped 32px → 24px → 32px between consecutive scenes.
+
+Built:
+- **`src/shell/PageHeader.jsx`** — the band extracted once, as three
+  exports: `PageHeader` (breadcrumb / title / `status` slot / `meta` slot
+  / description / `actions`), `PageBody` (the 24px content well, with an
+  opt-in 1200px `measure`), and `PageAction` (the module's green
+  filled/outlined control pair). Breadcrumb entries accept `to` for a
+  route or `onClick` for Setup's crumb, which rewinds a beat rather than
+  navigating.
+- **Five scenes migrated onto it**: Setup (both beat-0 and Privacy-Agent
+  variants), Requests, request detail, redaction, dashboard, and the
+  Reports/Subtasks/Settings module pages. Deleted along the way: the
+  per-scene `PageHeader` duplicates in `DashboardScene` and
+  `ModulePlaceholders`, and the Requests header's negative-margin bleed
+  hack — the band now sits outside the body padding, so the divider spans
+  full width without fighting the scene's gutter.
+- **`--fs-page-title` revised 22px → 24px/32px** in `tokens.css`, so the
+  token *is* the Figma band's title rather than something scenes had to
+  override locally.
+- **Gutters normalized to 24px** on every in-shell surface (Setup's two
+  `var(--space-8)` paddings, the Requests table well, the dashboard,
+  detail, redaction and module bodies). Verified at 1262×983: header
+  title and content card now share x=284 / right=1238 on all of them.
+- **Two fidelity fixes inside the detail scene's Request tab**: the
+  Suspected-Agent-Detection card's hardcoded `rgba(239,59,48,…)` pair
+  swapped for `--ot-danger-tint` / `--ot-danger`, and its `⚠` text glyph
+  replaced with a new outline `WarningIcon` in `shell/icons.jsx` (the
+  no-emoji tech constraint — this was the last glyph standing). The card
+  and the field table also lost their 640px cap, so they fill the tab
+  column instead of stopping halfway.
+
+Verified: production build clean; screenshot walk of `/setup`,
+`/requests`, `/requests/4207` (Request tab), `/requests/4207/redaction`,
+`/dashboard`, `/settings`, `/subtasks` at the presenter viewport — bands
+identical, no layout shift, cue overlay and beat counts untouched.
+
+**No new deviations.** All Session 4 open deviations carry forward
+unchanged; this session touched styling only.
+
 ## Session 3 original brief (for reference)
 
 Per `spec_pack/README.md`: setup agent conversation (`/setup`, 7 cues +

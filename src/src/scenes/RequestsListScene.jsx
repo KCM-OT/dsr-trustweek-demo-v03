@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { queue } from '../data/fixtures'
 import { StatusPill } from '../components/StatusPill'
 import { useSceneBeats, useCue } from '../cue/CueContext'
+import { PageHeader } from '../shell/PageHeader'
 
 // Augment queue items with spam/bot detection and duplicate detection
 function augmentQueueWithSpamDetection(queueData, rejectedIds = new Set()) {
@@ -142,9 +143,9 @@ export function RequestsListScene() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--ot-bg)' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 'var(--space-6) var(--space-8)' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Header flaggedCount={flaggedCount} />
-        <div style={{ flex: 1, overflow: 'auto', marginBottom: selectedIds.size > 0 ? 80 : 0 }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: 24, marginBottom: selectedIds.size > 0 ? 80 : 0 }}>
           <RequestsTable
             queue={filteredQueue}
             flaggedCount={flaggedCount}
@@ -182,42 +183,21 @@ export function RequestsListScene() {
 // ---------------------------------------------------------------------------
 function Header({ flaggedCount = 0 }) {
   return (
-    <header
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        padding: 24,
-        margin: 'calc(var(--space-6) * -1) calc(var(--space-8) * -1) var(--space-6)',
-        background: '#ffffff',
-        borderBottom: '1px solid #a9a9a9',
-      }}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-          <h1
-            style={{
-              margin: 0,
-              font: '600 24px/32px "Open Sans", sans-serif',
-              color: '#1a1a1a',
-            }}
-          >
-            Requests
-          </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span
-              aria-hidden="true"
-              style={{ width: 8, height: 8, borderRadius: 8, background: '#da7c01', flex: '0 0 auto' }}
-            />
-            <span style={{ font: '400 16px/24px "Open Sans", sans-serif', color: '#1a1a1a' }}>
-              {flaggedCount} flagged
-            </span>
-          </div>
-        </div>
-        <p style={{ margin: 0, font: '400 14px/20px "Open Sans", sans-serif', color: '#1a1a1a' }}>
-          View and manage all privacy requests
-        </p>
-      </div>
-    </header>
+    <PageHeader
+      title="Requests"
+      meta={
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span
+            aria-hidden="true"
+            style={{ width: 8, height: 8, borderRadius: 8, background: '#da7c01', flex: '0 0 auto' }}
+          />
+          <span style={{ font: '400 16px/24px "Open Sans", sans-serif', color: '#1a1a1a' }}>
+            {flaggedCount} flagged
+          </span>
+        </span>
+      }
+      description="View and manage all privacy requests"
+    />
   )
 }
 

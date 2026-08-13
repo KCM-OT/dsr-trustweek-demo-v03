@@ -49,8 +49,11 @@ export function PageHeader({ breadcrumb, title, status, meta, description, actio
   )
 }
 
-// Breadcrumb trail: [{ label, to }, …] — the last entry renders as plain
-// current-page ink, matching the Setup refit's crumb row.
+// Breadcrumb trail: [{ label, to }, { label, onClick }, …] — the last entry
+// renders as plain current-page ink, matching the Setup refit's crumb row.
+// Setup's first crumb rewinds a beat rather than navigating, hence onClick.
+const CRUMB_LINK = { color: HEADER_LINK, textDecoration: 'none', font: '600 14px/20px "Open Sans", sans-serif' }
+
 function Breadcrumb({ trail }) {
   return (
     <nav aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 4, minHeight: 20 }}>
@@ -59,12 +62,17 @@ function Breadcrumb({ trail }) {
         return (
           <span key={crumb.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             {crumb.to && !last ? (
-              <Link
-                to={crumb.to}
-                style={{ color: HEADER_LINK, textDecoration: 'none', font: '600 14px/20px "Open Sans", sans-serif' }}
-              >
+              <Link to={crumb.to} style={CRUMB_LINK}>
                 {crumb.label}
               </Link>
+            ) : crumb.onClick && !last ? (
+              <button
+                type="button"
+                onClick={crumb.onClick}
+                style={{ ...CRUMB_LINK, padding: 0, border: 0, background: 'transparent', cursor: 'pointer' }}
+              >
+                {crumb.label}
+              </button>
             ) : (
               <span style={{ color: HEADER_INK, font: '400 14px/20px "Open Sans", sans-serif' }}>{crumb.label}</span>
             )}

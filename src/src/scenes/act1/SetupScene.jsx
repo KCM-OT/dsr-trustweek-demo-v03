@@ -7,6 +7,7 @@ import { GroundingChip } from '../../components/GroundingChip'
 import { AiLoader } from '../../components/AiLoader'
 import { NorthwindWordmark } from '../../brand/NorthwindWordmark'
 import { FileIcon, ChevronDownIcon, ChevronRightIcon } from '../../shell/icons'
+import { PageHeader } from '../../shell/PageHeader'
 
 // Act 1 — setup agent conversation (build spec §1.1). A composed
 // conversational surface, not a bare chat: agent messages carry rich cards
@@ -106,60 +107,20 @@ export function SetupScene() {
   return (
     <div style={beat >= 1 ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}>
       {beat === 0 ? (
-        <header
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            gap: 8,
-            minHeight: 108,
-            padding: 24,
-            background: '#ffffff',
-            borderBottom: '1px solid #a9a9a9',
-          }}
-        >
-          <h1 style={{ margin: 0, color: '#1a1a1a', fontFamily: '"Open Sans", sans-serif', fontSize: 24, fontWeight: 600, lineHeight: '32px' }}>
-            Setup
-          </h1>
-          <p style={{ margin: 0, color: '#1a1a1a', fontFamily: '"Open Sans", sans-serif', fontSize: 14, lineHeight: '20px' }}>
-            Configure Data Subject Rights intake so your Privacy Agent can route, resolve, and report on requests automatically.
-          </p>
-        </header>
+        <PageHeader
+          title="Setup"
+          description="Configure Data Subject Rights intake so your Privacy Agent can route, resolve, and report on requests automatically."
+        />
       ) : (
-        <header
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            gap: 8,
-            minHeight: 136,
-            padding: 24,
-            background: '#ffffff',
-            borderBottom: '1px solid #a9a9a9',
-          }}
-        >
-          <nav aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 4, minHeight: 20 }}>
-            <button
-              type="button"
-              onClick={() => jumpToBeat(0)}
-              style={{ padding: 0, border: 0, background: 'transparent', color: '#1470a9', fontFamily: '"Open Sans", sans-serif', fontSize: 14, fontWeight: 600, lineHeight: '20px', cursor: 'pointer' }}
-            >
-              Setup
-            </button>
-            <img src="/figma/chevron-thin-right.svg" alt="" width="8" height="8" />
-            <span style={{ color: '#1a1a1a', fontFamily: '"Open Sans", sans-serif', fontSize: 14, lineHeight: '20px' }}>Privacy Agent</span>
-          </nav>
-          <h1 style={{ margin: 0, color: '#1a1a1a', fontFamily: '"Open Sans", sans-serif', fontSize: 24, fontWeight: 600, lineHeight: '32px' }}>
-            Privacy Agent
-          </h1>
-          <p style={{ margin: 0, color: '#1a1a1a', fontFamily: '"Open Sans", sans-serif', fontSize: 14, lineHeight: '20px' }}>
-            AI Assisted configuration for jurisdiction, data subject rights, response templates, and workflows.
-          </p>
-        </header>
+        <PageHeader
+          breadcrumb={[{ label: 'Setup', onClick: () => jumpToBeat(0) }, { label: 'Privacy Agent' }]}
+          title="Privacy Agent"
+          description="AI Assisted configuration for jurisdiction, data subject rights, response templates, and workflows."
+        />
       )}
 
       {beat === 0 ? (
-        <div style={{ padding: '24px var(--space-8) 0' }}>
+        <div style={{ padding: '24px 24px 0' }}>
           <div
             style={{
               display: 'grid',
@@ -357,7 +318,7 @@ export function SetupScene() {
             <ChatComposeBar />
           </div>
 
-          <div style={{ paddingTop: 24, paddingRight: 'var(--space-8)', paddingBottom: 24 }}>
+          <div style={{ paddingTop: 24, paddingRight: 24, paddingBottom: 24 }}>
             <IntakeStepsCard beat={beat} />
           </div>
         </div>
