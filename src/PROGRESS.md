@@ -675,6 +675,50 @@ identical, no layout shift, cue overlay and beat counts untouched.
 **No new deviations.** All Session 4 open deviations carry forward
 unchanged; this session touched styling only.
 
+### 3.5b — Deployment fix + three restored binaries
+
+Published site was serving `404 NOT_FOUND`. Cause was **not** app code:
+the Vercel project had **Root Directory unset**, so it built from the
+repo root — which holds only `.gitignore` and `src/`. No `package.json`
+there meant no framework detected, no build run, and an empty directory
+published; the deploy reported READY because there was nothing to do.
+Knock-on effects: `dist/index.html` never existed (hence `/` 404), and
+**`src/vercel.json` was ignored**, so the SPA rewrite this deck needs for
+`/setup`, `/requests/4207`, `/dashboard` was absent too.
+
+Fixed by setting `rootDirectory: "src"` and `framework: "vite"` on the
+project. (Note for future CLI work: `vercel api`'s `-d` is the global
+*debug* flag, not a data flag — a PATCH with `-d` sends no body and
+silently no-ops. Use `--input -` and read the result back.)
+
+While auditing, found three committed-but-absent binaries — dropped in
+the original v0 import, not ignored by any `.gitignore`, and unrelated to
+3.5:
+- `public/fonts/outfit-variable-latin.woff2` — the build warned on it and
+  `brand.css`'s `@font-face` silently fell back to Avenir Next, which also
+  broke README non-negotiable #1 (runs fully offline). Re-fetched and
+  self-hosted.
+- `public/report-pages/page-{1..9}.png` — **all nine missing**, so the
+  entire `/report` viewer rendered blank. This was the most severe of the
+  three and would have killed Act 3's payoff on stage.
+- `public/AR-4207_access_report.pdf` — the report scene's `PDF_URL`.
+
+All regenerated from the committed source of truth (`report/*.html` +
+`report/render-pdf.mjs`) rather than re-authored, so the artifacts still
+match the fixtures. Required installing Chromium and its runtime libs in
+the VM; the renderer's own `CHROMIUM` env override drove it, and it
+reported all 9 pages with no overflow.
+
+Verified on a preview deployment: `/`, `/setup`, `/dashboard`,
+`/requests/4207`, `/requests/4207/redaction`, `/report` all 200 (SPA
+rewrite live), plus the woff2, PDF, and page PNGs; `/report` loads 16
+images with none broken and `document.fonts` reports Outfit `loaded`.
+
+**Open:** the project has SSO deployment protection
+(`all_except_custom_domains`), so every `*.vercel.app` URL demands a
+Vercel team login — a demo audience would hit an auth wall, not the deck.
+Needs either a custom domain or protection relaxed before TrustWeek.
+
 ## Session 3 original brief (for reference)
 
 Per `spec_pack/README.md`: setup agent conversation (`/setup`, 7 cues +
