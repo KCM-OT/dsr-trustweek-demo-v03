@@ -1,0 +1,116 @@
+/* Design tokens — ported from spec_pack/02_design_system.md §1 (revised
+   for the real Privacy Rights Automation reference screenshots — see
+   spec_pack/reference/pra_request_queue.png and pra_request_detail.png).
+   Two systems coexist (future-OneTrust shell vs. Meridian brand); they
+   must never blend. This file holds both token sets plus shared base
+   resets. Component-specific classes (status pills, grounding chips,
+   tables, etc.) are added by the sessions that build those surfaces. */
+
+:root {
+  /* Platform chrome (top bar / sidebar) — 02_design_system.md §1, revised */
+  --ot-topbar: #0b0e11;
+  --ot-sidebar: #1f2a3b;
+  --ot-sidebar-ink: #c7d0da;
+  /* Sidebar active/hover row shades — spec describes the effect ("darker
+     row background + white text + thin left accent") without giving exact
+     hex; these are implementation choices, tuned against pra_request_queue.png. */
+  --ot-sidebar-active: #141b26;
+  --ot-sidebar-hover: rgba(255, 255, 255, 0.04);
+
+  /* Future OneTrust shell — color */
+  --ot-green: #3d7a44; /* filled primary buttons (Launch assessment green) */
+  --ot-green-tint: #e7f2e9;
+  --ot-link: #2b6cd4; /* record links, outlined in-progress pills */
+  --ot-blue-tint: #edf3fe; /* grounding-chip tint (e.g. CCPA §1798.110) */
+  --ot-ink: #1f2933;
+  --ot-ink-2: #52606d;
+  --ot-ink-3: #9aa5b1;
+  --ot-bg: #f5f7f9;
+  --ot-surface: #ffffff;
+  --ot-border: #e4e9ee;
+  --ot-agent: #7a5af8; /* agent everything; matches OneTrust's posture-agent purple family */
+  --ot-agent-tint: #f1edfe;
+  /* Agent chat bubble — Figma "chat-elements" (Privacy Platform Journey Maps,
+     node 492:15408): bubble fill/border and avatar-circle fill. */
+  --ot-agent-bubble-bg: #f8f8ff;
+  --ot-agent-bubble-border: rgba(134, 89, 232, 0.2);
+  --ot-agent-avatar-bg: #eeeafd;
+  --ot-warn: #b45309;
+  --ot-warn-tint: #fdf3e7;
+  --ot-danger: #c0392b;
+  --ot-danger-tint: #fbedeb;
+  /* Implementation choice — not in spec — for the top-bar avatar circle
+     ("muted maroon"), tuned against pra_request_queue.png's "RE" avatar. */
+  --ot-avatar: #8b3a46;
+  --ot-avatar-tint: #f3e6e8;
+
+  /* Type — Open Sans, weights 400/600 only */
+  --fs-page-title: 600 22px/1.3 "Open Sans", sans-serif;
+  --fs-section: 600 16px/1.3 "Open Sans", sans-serif;
+  --fs-body: 400 14px/1.5 "Open Sans", sans-serif;
+  --fs-meta: 400 12.5px/1.4 "Open Sans", sans-serif;
+
+  /* Shape & space */
+  --radius-card: 10px;
+  --radius-chip: 999px;
+  --radius-control: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Elevation — single soft-shadow tier for overlays/panes only */
+  --shadow-overlay: 0 8px 24px rgba(31, 41, 51, 0.1);
+  /* Floating app window (Teams Meet) — layered for stronger separation */
+  --shadow-window: 0 2px 4px rgba(31, 41, 51, 0.08), 0 12px 28px rgba(31, 41, 51, 0.16), 0 32px 64px rgba(31, 41, 51, 0.14);
+
+  /* Meridian corporate (PDF report, parent-brand contexts) */
+  --mer-navy: #14304a;
+  --mer-copper: #c56a2d;
+  --mer-cream: #faf6f0;
+  --mer-ink: #22303c;
+
+  /* Northwind Outfitters (intake agent) */
+  --nw-pine: #1e4d3b;
+  --nw-sand: #efe9dc;
+  --nw-clay: #c56a2d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ot-bg);
+  color: var(--ot-ink);
+  font: var(--fs-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+}
+
+/* Stage machine: presenter clicks must not leave browser focus rings on
+   camera (noticed on the Act 2 request-type cards). Keyboard navigation is
+   the cue engine, not Tab — so the default ring buys nothing here. */
+button:focus,
+input:focus {
+  outline: none;
+}

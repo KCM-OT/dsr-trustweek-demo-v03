@@ -1,0 +1,740 @@
+{
+ "_meta": {
+  "generated": "for TrustWeek demo; all names/data fictional",
+  "currentDate": "2026-07-10"
+ },
+ "tenant": {
+  "company": "Meridian Brands",
+  "admin": {
+   "name": "Amara Osei",
+   "role": "Privacy Program Lead"
+  },
+  "brands": [
+   "Northwind Outfitters",
+   "Cascade Home",
+   "Alpine Rewards"
+  ],
+  "regulations": [
+   "CCPA/CPRA",
+   "VCDPA",
+   "CPA",
+   "GDPR"
+  ],
+  "systems": [
+   {
+    "name": "Salesforce",
+    "holds": "Customer records",
+    "integration": "connected",
+    "template": "v3.2"
+   },
+   {
+    "name": "Marketo",
+    "holds": "Marketing profiles",
+    "integration": "connected",
+    "template": "v2.8"
+   },
+   {
+    "name": "Zendesk",
+    "holds": "Support tickets + transcripts",
+    "integration": "connected",
+    "template": "v3.0"
+   },
+   {
+    "name": "Internal warehouse",
+    "holds": "Transactions + Alpine Rewards",
+    "integration": "none",
+    "owner": {
+     "name": "Daniel Okafor",
+     "team": "Data Platform Engineering",
+     "channel": "Microsoft Teams",
+     "itsm": true
+    }
+   }
+  ],
+  "documents": [
+   "DSAR Standard Operating Procedure.pdf",
+   "Customer Data Flows.pdf",
+   "Response Letter Examples.docx",
+   "Meridian Brand + Tone Guide.pdf"
+  ]
+ },
+ "marcus": {
+  "requestId": "AR-4207",
+  "subject": "Marcus Bell",
+  "email": "marcus.bell@—mail.com",
+  "type": "Access",
+  "jurisdiction": "California, US",
+  "regulation": "CCPA/CPRA",
+  "received": "2026-07-08",
+  "deadline": "2026-08-22",
+  "daysRemaining": 41,
+  "loyalty": {
+   "program": "Alpine Rewards",
+   "points": 12480,
+   "memberSince": "2019-03-14"
+  },
+  "customerId": "C-102-448-871",
+  "plan": [
+   {
+    "id": 1,
+    "title": "Verify identity",
+    "system": "ID verification",
+    "status": "done",
+    "completedAt": "2026-07-08T16:02",
+    "grounding": [
+     "CCPA §1798.130",
+     "SOP §2.1"
+    ]
+   },
+   {
+    "id": 2,
+    "title": "Retrieve customer records",
+    "system": "Salesforce",
+    "status": "done",
+    "completedAt": "2026-07-09T09:14",
+    "grounding": [
+     "Customer Data Flows"
+    ]
+   },
+   {
+    "id": 3,
+    "title": "Retrieve marketing profile + engagement history",
+    "system": "Marketo",
+    "status": "done",
+    "completedAt": "2026-07-09T09:21",
+    "grounding": [
+     "Customer Data Flows"
+    ]
+   },
+   {
+    "id": 4,
+    "title": "Retrieve support transcripts + redact third-party data",
+    "system": "Zendesk",
+    "status": "done",
+    "completedAt": "2026-07-09T11:47",
+    "note": "Redaction summary ready",
+    "grounding": [
+     "Customer Data Flows",
+     "SOP §4.2"
+    ]
+   },
+   {
+    "id": 5,
+    "title": "Warehouse extract — transactions + Alpine Rewards history",
+    "system": "Internal warehouse",
+    "status": "awaitingHuman",
+    "assignee": "Daniel Okafor",
+    "ticket": "SNOW-88412",
+    "grounding": [
+     "Customer Data Flows"
+    ]
+   },
+   {
+    "id": 6,
+    "title": "Generate branded access report + deliver",
+    "system": "Privacy Agent",
+    "status": "planned",
+    "grounding": [
+     "CCPA §1798.110",
+     "Brand + Tone Guide",
+     "Response Letter Examples"
+    ]
+   }
+  ],
+  "redaction": {
+   "source": "6 Zendesk support transcripts (2019–2026)",
+   "findings": [
+    {
+     "category": "Support agent names & email signatures",
+     "instances": 14,
+     "confidence": "high"
+    },
+    {
+     "category": "Another customer's name + order details (shared purchase, Dec 2023)",
+     "instances": 3,
+     "confidence": "high"
+    },
+    {
+     "category": "Internal account identifiers",
+     "instances": 7,
+     "confidence": "medium",
+     "note": "Some identifier formats were ambiguous between internal IDs and order references — I redacted all candidates. Worth a spot-check."
+    }
+   ],
+   "excerpts": [
+    {
+     "findingCategory": "Internal account identifiers",
+     "ticket": "ZD-30117",
+     "date": "2024-02-09",
+     "text": "Thanks for your patience, Marcus. I've linked your exchange to account ████████ and refunded the difference. Your Alpine Rewards points from order NW-2024-1180 will post within 48 hours. — ██████ ████, Northwind Support"
+    }
+   ]
+  },
+  "activity": [
+   {
+    "ts": "2026-07-08T15:58",
+    "actor": "agent",
+    "action": "Classified request: Access · Consumer · California → CCPA/CPRA",
+    "chips": [
+     "CCPA/CPRA"
+    ]
+   },
+   {
+    "ts": "2026-07-08T16:02",
+    "actor": "agent",
+    "action": "Identity verified (email + account match)",
+    "chips": [
+     "SOP §2.1"
+    ]
+   },
+   {
+    "ts": "2026-07-08T16:03",
+    "actor": "agent",
+    "action": "Plan generated: 6 steps across 4 systems + report",
+    "chips": [
+     "Customer Data Flows",
+     "SOP §4.2"
+    ]
+   },
+   {
+    "ts": "2026-07-09T09:14",
+    "actor": "agent",
+    "action": "Salesforce: retrieved 1 customer record, 22 fields",
+    "chips": [
+     "Salesforce"
+    ]
+   },
+   {
+    "ts": "2026-07-09T09:21",
+    "actor": "agent",
+    "action": "Marketo: retrieved profile + 340 engagement events",
+    "chips": [
+     "Marketo"
+    ]
+   },
+   {
+    "ts": "2026-07-09T11:47",
+    "actor": "agent",
+    "action": "Zendesk: retrieved 6 transcripts; redacted 24 instances of third-party data across 3 categories",
+    "chips": [
+     "SOP §4.2"
+    ]
+   },
+   {
+    "ts": "2026-07-09T11:52",
+    "actor": "agent",
+    "action": "Opened Teams thread with Daniel Okafor; created ticket SNOW-88412",
+    "chips": [
+     "Customer Data Flows"
+    ]
+   },
+   {
+    "ts": "2026-07-10T14:14",
+    "actor": "okafor",
+    "action": "Delivered warehouse extract (214 rows, 4 tables) via Teams",
+    "chips": [
+     "SNOW-88412"
+    ]
+   },
+   {
+    "ts": "2026-07-10T14:14",
+    "actor": "agent",
+    "action": "Verified extract; resolved SNOW-88412",
+    "chips": [
+     "SNOW-88412"
+    ]
+   },
+   {
+    "ts": "2026-07-10T14:31",
+    "actor": "osei",
+    "action": "Privacy sign-off: redactions approved",
+    "chips": [
+     "SOP §4.2"
+    ]
+   },
+   {
+    "ts": "2026-07-10T14:36",
+    "actor": "agent",
+    "action": "Generated access report (9 pages, English US) to Meridian brand + tone guide",
+    "chips": [
+     "Brand + Tone Guide",
+     "CCPA §1798.110"
+    ]
+   }
+  ]
+ },
+ "teamsThread": {
+  "participants": [
+   "Meridian Privacy Agent",
+   "Daniel Okafor"
+  ],
+  "ticket": "SNOW-88412",
+  "messages": "see 03_demo_script.md Act 3 split screen — verbatim"
+ },
+ "history": {
+  "days": [
+   {
+    "date": "2026-06-11",
+    "received": 45,
+    "agentFulfilled": 29,
+    "humanInvolved": 16,
+    "medianDays": 5.4
+   },
+   {
+    "date": "2026-06-12",
+    "received": 49,
+    "agentFulfilled": 32,
+    "humanInvolved": 17,
+    "medianDays": 5.1
+   },
+   {
+    "date": "2026-06-13",
+    "received": 47,
+    "agentFulfilled": 30,
+    "humanInvolved": 17,
+    "medianDays": 5.1
+   },
+   {
+    "date": "2026-06-14",
+    "received": 46,
+    "agentFulfilled": 31,
+    "humanInvolved": 15,
+    "medianDays": 5.2
+   },
+   {
+    "date": "2026-06-15",
+    "received": 49,
+    "agentFulfilled": 33,
+    "humanInvolved": 16,
+    "medianDays": 4.8
+   },
+   {
+    "date": "2026-06-16",
+    "received": 42,
+    "agentFulfilled": 28,
+    "humanInvolved": 14,
+    "medianDays": 5.0
+   },
+   {
+    "date": "2026-06-17",
+    "received": 46,
+    "agentFulfilled": 31,
+    "humanInvolved": 15,
+    "medianDays": 4.8
+   },
+   {
+    "date": "2026-06-18",
+    "received": 40,
+    "agentFulfilled": 27,
+    "humanInvolved": 13,
+    "medianDays": 4.7
+   },
+   {
+    "date": "2026-06-19",
+    "received": 49,
+    "agentFulfilled": 34,
+    "humanInvolved": 15,
+    "medianDays": 4.5
+   },
+   {
+    "date": "2026-06-20",
+    "received": 47,
+    "agentFulfilled": 34,
+    "humanInvolved": 13,
+    "medianDays": 4.2
+   },
+   {
+    "date": "2026-06-21",
+    "received": 48,
+    "agentFulfilled": 32,
+    "humanInvolved": 16,
+    "medianDays": 3.9
+   },
+   {
+    "date": "2026-06-22",
+    "received": 44,
+    "agentFulfilled": 31,
+    "humanInvolved": 13,
+    "medianDays": 4.3
+   },
+   {
+    "date": "2026-06-23",
+    "received": 49,
+    "agentFulfilled": 34,
+    "humanInvolved": 15,
+    "medianDays": 4.2
+   },
+   {
+    "date": "2026-06-24",
+    "received": 42,
+    "agentFulfilled": 30,
+    "humanInvolved": 12,
+    "medianDays": 3.9
+   },
+   {
+    "date": "2026-06-25",
+    "received": 46,
+    "agentFulfilled": 34,
+    "humanInvolved": 12,
+    "medianDays": 3.9
+   },
+   {
+    "date": "2026-06-26",
+    "received": 47,
+    "agentFulfilled": 35,
+    "humanInvolved": 12,
+    "medianDays": 3.8
+   },
+   {
+    "date": "2026-06-27",
+    "received": 43,
+    "agentFulfilled": 31,
+    "humanInvolved": 12,
+    "medianDays": 3.5
+   },
+   {
+    "date": "2026-06-28",
+    "received": 48,
+    "agentFulfilled": 36,
+    "humanInvolved": 12,
+    "medianDays": 3.8
+   },
+   {
+    "date": "2026-06-29",
+    "received": 43,
+    "agentFulfilled": 32,
+    "humanInvolved": 11,
+    "medianDays": 3.5
+   },
+   {
+    "date": "2026-06-30",
+    "received": 52,
+    "agentFulfilled": 40,
+    "humanInvolved": 12,
+    "medianDays": 3.4
+   },
+   {
+    "date": "2026-07-01",
+    "received": 52,
+    "agentFulfilled": 40,
+    "humanInvolved": 12,
+    "medianDays": 2.9
+   },
+   {
+    "date": "2026-07-02",
+    "received": 44,
+    "agentFulfilled": 35,
+    "humanInvolved": 9,
+    "medianDays": 2.8
+   },
+   {
+    "date": "2026-07-03",
+    "received": 46,
+    "agentFulfilled": 36,
+    "humanInvolved": 10,
+    "medianDays": 2.8
+   },
+   {
+    "date": "2026-07-04",
+    "received": 49,
+    "agentFulfilled": 39,
+    "humanInvolved": 10,
+    "medianDays": 3.1
+   },
+   {
+    "date": "2026-07-05",
+    "received": 48,
+    "agentFulfilled": 38,
+    "humanInvolved": 10,
+    "medianDays": 2.6
+   },
+   {
+    "date": "2026-07-06",
+    "received": 43,
+    "agentFulfilled": 35,
+    "humanInvolved": 8,
+    "medianDays": 2.5
+   },
+   {
+    "date": "2026-07-07",
+    "received": 46,
+    "agentFulfilled": 38,
+    "humanInvolved": 8,
+    "medianDays": 2.3
+   },
+   {
+    "date": "2026-07-08",
+    "received": 45,
+    "agentFulfilled": 35,
+    "humanInvolved": 10,
+    "medianDays": 2.2
+   },
+   {
+    "date": "2026-07-09",
+    "received": 44,
+    "agentFulfilled": 37,
+    "humanInvolved": 7,
+    "medianDays": 2.4
+   },
+   {
+    "date": "2026-07-10",
+    "received": 47,
+    "agentFulfilled": 39,
+    "humanInvolved": 8,
+    "medianDays": 2.1
+   }
+  ],
+  "requestTypeShare": {
+   "access": 0.46,
+   "deletion": 0.3,
+   "optOut": 0.16,
+   "correction": 0.08
+  },
+  "topJurisdictions": [
+   [
+    "California, US",
+    31
+   ],
+   [
+    "Germany",
+    22
+   ],
+   [
+    "Virginia, US",
+    17
+   ],
+   [
+    "Colorado, US",
+    12
+   ],
+   [
+    "Other US",
+    18
+   ]
+  ],
+  "heroReads": {
+   "sinceYesterday": {
+    "received": 47,
+    "agentFulfilled": 39,
+    "awaitingHuman": 8,
+    "medianDays": 2.1
+   },
+   "thirtyDay": {
+    "agentFulfilledPerDayStart": 31,
+    "agentFulfilledPerDayEnd": 39,
+    "medianDaysStart": 5.4,
+    "medianDaysEnd": 2.1
+   }
+  }
+ },
+ "attention": [
+  {
+   "id": 1,
+   "kind": "identityMatch",
+   "severity": "warn",
+   "request": "AR-4198",
+   "scripted": true,
+   "title": "Identity match — low confidence",
+   "body": "I found two candidate records for \"J. Whitfield\" in Salesforce — same email, different addresses. I paused before disclosure. Review the match.",
+   "action": "Review match",
+   "resolveNote": "Approved · Agent resumed fulfillment.",
+   "compare": {
+    "a": {
+     "name": "Jordan Whitfield",
+     "email": "j.whitfield@—mail.com",
+     "address": "114 Cedar Ln, Sacramento CA",
+     "lastOrder": "2026-05-02"
+    },
+    "b": {
+     "name": "Jordan Whitfield",
+     "email": "j.whitfield@—mail.com",
+     "address": "88 Pierce St Apt 4, Oakland CA",
+     "lastOrder": "2023-11-19"
+    },
+    "matchOn": [
+     "name",
+     "email"
+    ]
+   }
+  },
+  {
+   "id": 2,
+   "kind": "stalled",
+   "severity": "warn",
+   "request": "AR-4211",
+   "scripted": true,
+   "title": "Stalled — deadline risk",
+   "body": "Warehouse extract open 6 days; deadline in 9. I've reminded Daniel Okafor twice in Teams. Recommend escalating to his manager.",
+   "action": "Escalate",
+   "resolveNote": "Escalated to R. Vance (Eng Manager) · Ticket SNOW-88419 updated."
+  },
+  {
+   "id": 3,
+   "kind": "identityMatch",
+   "severity": "warn",
+   "request": "AR-4215",
+   "title": "Verification document unreadable",
+   "body": "The uploaded ID photo is too low-resolution to verify. I've asked the requester for a new one — flagging in case no reply by Jul 14.",
+   "action": "View request"
+  },
+  {
+   "id": 4,
+   "kind": "scope",
+   "severity": "warn",
+   "request": "AR-4201",
+   "title": "Unusual scope — household request",
+   "body": "Requester asked for data about themselves and their spouse. CCPA requires separate verified requests — I drafted a reply explaining this. Approve before I send?",
+   "action": "Review draft"
+  },
+  {
+   "id": 5,
+   "kind": "stalled",
+   "severity": "warn",
+   "request": "AR-4189",
+   "title": "Integration retry exhausted",
+   "body": "Marketo returned rate-limit errors on 3 attempts overnight. Backing off until 6 PM; deadline is Aug 2 so no risk yet — informational.",
+   "action": "View log"
+  },
+  {
+   "id": 6,
+   "kind": "legal",
+   "severity": "warn",
+   "request": "DR-4194",
+   "title": "Deletion hold — open dispute",
+   "body": "This account has an open chargeback dispute. Per SOP §5.3 I routed to Legal (M. Iyer) before deletion. Awaiting their response since Jul 9.",
+   "action": "View request"
+  },
+  {
+   "id": 7,
+   "kind": "identityMatch",
+   "severity": "warn",
+   "request": "AR-4222",
+   "title": "Employee request via consumer form",
+   "body": "Requester appears to be a current employee using the Northwind consumer intake. Employee requests follow a different obligation set — confirm re-route?",
+   "action": "Confirm re-route"
+  },
+  {
+   "id": 8,
+   "kind": "scope",
+   "severity": "warn",
+   "request": "OO-4226",
+   "title": "Opt-out signal conflict",
+   "body": "Requester opted out via form but their browser sends a Global Privacy Control opt-in for analytics. I honored the stricter signal (opt-out) — flagging for awareness.",
+   "action": "Dismiss"
+  }
+ ],
+ "queue": [
+  {
+   "id": "AR-4188",
+   "subject": "S. Alvarez",
+   "type": "Access",
+   "jurisdiction": "California, US",
+   "status": "Agent fulfilling",
+   "daysLeft": 15
+  },
+  {
+   "id": "DR-4191",
+   "subject": "J. Whitfield",
+   "type": "Deletion",
+   "jurisdiction": "California, US",
+   "status": "Awaiting human",
+   "daysLeft": 17
+  },
+  {
+   "id": "OO-4194",
+   "subject": "T. Nakamura",
+   "type": "Opt-Out",
+   "jurisdiction": "Colorado, US",
+   "status": "Agent fulfilling",
+   "daysLeft": 18
+  },
+  {
+   "id": "AR-4197",
+   "subject": "P. Osei-Bonsu",
+   "type": "Access",
+   "jurisdiction": "Virginia, US",
+   "status": "Complete",
+   "daysLeft": 35
+  },
+  {
+   "id": "AR-4200",
+   "subject": "L. Fontaine",
+   "type": "Correction",
+   "jurisdiction": "Germany",
+   "status": "Agent fulfilling",
+   "daysLeft": 12
+  },
+  {
+   "id": "AR-4203",
+   "subject": "D. Brandt",
+   "type": "Access",
+   "jurisdiction": "Germany",
+   "status": "Complete",
+   "daysLeft": 32
+  },
+  {
+   "id": "DR-4206",
+   "subject": "K. Marsh",
+   "type": "Deletion",
+   "jurisdiction": "California, US",
+   "status": "Awaiting human",
+   "daysLeft": 32
+  },
+  {
+   "id": "AR-4209",
+   "subject": "A. Puri",
+   "type": "Access",
+   "jurisdiction": "Virginia, US",
+   "status": "Agent fulfilling",
+   "daysLeft": 37
+  },
+  {
+   "id": "AR-4212",
+   "subject": "C. Weiss",
+   "type": "Access",
+   "jurisdiction": "Germany",
+   "status": "Complete",
+   "daysLeft": 41
+  },
+  {
+   "id": "OO-4215",
+   "subject": "R. Delgado",
+   "type": "Opt-Out",
+   "jurisdiction": "California, US",
+   "status": "Complete",
+   "daysLeft": 24
+  },
+  {
+   "id": "AR-4207",
+   "subject": "M. Bell",
+   "type": "Access",
+   "jurisdiction": "California, US",
+   "status": "Awaiting human",
+   "daysLeft": 41
+  },
+  {
+   "id": "AR-4221",
+   "subject": "N. Sørensen",
+   "type": "Access",
+   "jurisdiction": "Germany",
+   "status": "Agent fulfilling",
+   "daysLeft": 8
+  },
+  {
+   "id": "DR-4224",
+   "subject": "H. Vance",
+   "type": "Deletion",
+   "jurisdiction": "Colorado, US",
+   "status": "Agent fulfilling",
+   "daysLeft": 15
+  },
+  {
+   "id": "AR-4227",
+   "subject": "E. Okoro",
+   "type": "Access",
+   "jurisdiction": "California, US",
+   "status": "Complete",
+   "daysLeft": 42
+  }
+ ]
+}

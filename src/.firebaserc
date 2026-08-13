@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "ot-pa-strategy-2026-661ce"
+  },
+  "targets": {
+    "ot-pa-strategy-2026-661ce": {
+      "hosting": {
+        "dsar-demo": [
+          "tw26-agentic-dsr"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

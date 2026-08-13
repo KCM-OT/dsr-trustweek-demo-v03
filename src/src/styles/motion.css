@@ -1,0 +1,173 @@
+/* Choreography motion — 02_design_system.md §1 ("200ms ease-out
+   transitions; active agent work = subtle purple shimmer bar; completion =
+   150ms check-draw. Nothing animates at rest.") plus the README #3 pacing
+   bands: typing indicators ~800ms, status flips staggered 400–700ms,
+   progress steps 600–900ms. Scenes set --stagger-i (an integer) per item
+   and --stagger-step to space entrances; sync beats set explicit
+   animation-delay per element. */
+
+:root {
+  --motion-ease: ease-out;
+  --motion-fast: 200ms;
+  --motion-check: 150ms;
+  --stagger-step: 140ms;
+}
+
+/* Entrance for choreographed items (plan items, chat messages, cards).
+   Fill-mode both keeps items hidden until their staggered delay elapses. */
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-enter {
+  animation: fade-slide-in var(--motion-fast) var(--motion-ease) both;
+  animation-delay: calc(var(--stagger-i, 0) * var(--stagger-step));
+}
+
+/* Active agent work — a thin bar with a slow purple shimmer. The only
+   thing permitted to animate at rest, and only while status is Running. */
+@keyframes agent-shimmer {
+  from {
+    background-position: -80px 0;
+  }
+  to {
+    background-position: 80px 0;
+  }
+}
+
+.agent-shimmer {
+  height: 3px;
+  border-radius: 2px;
+  background-image: linear-gradient(
+    90deg,
+    var(--ot-agent-tint) 0%,
+    var(--ot-agent) 50%,
+    var(--ot-agent-tint) 100%
+  );
+  background-size: 80px 100%;
+  animation: agent-shimmer 1.4s linear infinite;
+}
+
+/* Completion check — stroke draws in 150ms. Apply to an SVG path with
+   pathLength="1". */
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.check-draw {
+  stroke-dasharray: 1;
+  animation: check-draw var(--motion-check) var(--motion-ease) both;
+}
+
+/* Teams typing indicator — three dots pulsing; the indicator itself is
+   shown for ~800ms before the message lands (scene logic owns the swap). */
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+.typing-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ot-ink-3);
+  animation: typing-dot 900ms ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+/* Intake-steps progress card — a step's number badge gets a sonar-like
+   pulse ring the moment it becomes the active step (README #3 progress-step
+   band, 600–900ms). Two rings, offset, fire twice then settle — the scene
+   unmounts .sonar-ring after the burst so nothing animates at rest. */
+@keyframes sonar-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.sonar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--ot-step-color, #a2c0a9);
+  animation: sonar-pulse 800ms var(--motion-ease) 2;
+  pointer-events: none;
+}
+
+.sonar-ring + .sonar-ring {
+  animation-delay: 260ms;
+}
+
+/* AiLoader — the 1s transition pauses between slides 1→2 and 8→9. A ring
+   sweeps clockwise around the AI mark; its two sparkles pulse scale/opacity
+   out of phase. Looping is intentional here (same "active agent work"
+   exception as agent-shimmer) — the loader only ever mounts for the scripted
+   pause window, never sits at rest. */
+@keyframes ai-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ai-loader-ring {
+  transform-origin: center;
+  animation: ai-loader-spin 1s linear infinite;
+}
+
+@keyframes ai-loader-pulse {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.ai-loader-sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ai-loader-pulse 1s ease-in-out infinite;
+}
+
+.ai-loader-sparkle--lg {
+  animation-delay: 0ms;
+}
+
+.ai-loader-sparkle--sm {
+  animation-delay: 330ms;
+}
