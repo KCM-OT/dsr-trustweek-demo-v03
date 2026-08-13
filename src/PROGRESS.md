@@ -761,6 +761,36 @@ All routes 200 (`/`, `/setup`, `/dashboard`, `/requests`,
 (32 KB), PDF (234 KB), and `page-1`/`page-9` PNGs; app boots in-browser
 with the 3.5 header band intact.
 
+### 3.5d — v0 preview panel: Vite `allowedHosts`
+
+Separate from the deploy problem, and a separate cause. The dev server was
+healthy the whole time (200 on `localhost:3000`), but the in-chat preview
+panel showed nothing because `vite.config.js` had
+`allowedHosts: ['.vercel.run']`. Vite answers a Host header it doesn't
+recognise with a **403 "Blocked request. This host is not allowed"**
+instead of the app, so a panel proxying through any other hostname got an
+error page, not the deck. Confirmed by curling with spoofed Host headers:
+`.vercel.run` → 200, but `v0.dev` / `v0.app` / `vercel.app` → 403.
+
+Fixed with `allowedHosts: true` (accept any Host). Dev-server only — no
+effect on the deployed build, which is static files behind Vercel's own
+routing. Re-tested the same spoofed hosts: all 200.
+
+Note Vite watches its own config and self-restarts, so an explicit
+restart afterwards fails with `Port 3000 is already in use` — that error
+means the reload already happened, not that something broke.
+
+Verified all 9 routes in-browser at 1160x1111 dark: `/setup`,
+`/dashboard`, `/requests`, `/requests/4207`,
+`/requests/4207/redaction`, `/report`, `/reports`, `/subtasks`,
+`/settings` — every one renders real content with **0 broken images**
+(34 images on `/setup`), and HMR reports `[vite] connected`.
+
+One red herring worth recording: the console history showed
+`ReportsScene` crashing repeatedly. Those were **stale** entries from
+mid-edit HMR reloads in earlier sessions — `/reports` renders fine now
+(h1 "Reports"). Don't re-fix it.
+
 **Open:** the project has SSO deployment protection
 (`all_except_custom_domains`), so every `*.vercel.app` URL demands a
 Vercel team login — a demo audience would hit an auth wall, not the deck.
