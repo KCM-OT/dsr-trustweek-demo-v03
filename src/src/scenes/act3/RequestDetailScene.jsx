@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { marcus } from '../../data/fixtures'
 import { useCue, useSceneBeats } from '../../cue/CueContext'
 import { StatusPill } from '../../components/StatusPill'
@@ -16,7 +16,9 @@ import {
   HeadsetIcon,
   DatabaseIcon,
   DocumentIcon,
+  WarningIcon,
 } from '../../shell/icons'
+import { PageHeader, PageBody, PageAction } from '../../shell/PageHeader'
 import { ActivityTrail } from './ActivityTrail'
 import { formatDate, formatDateTime } from './format'
 
@@ -79,58 +81,44 @@ export function RequestDetailScene() {
   }, [beat, navigate])
 
   return (
-    <div style={{ padding: 'var(--space-6) var(--space-8)' }}>
+    <div>
       <Header />
-      <div style={{ display: 'flex', gap: 'var(--space-8)', marginTop: 'var(--space-6)' }}>
-        <MetaRail />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Tabs tab={tab} onSelect={setTab} />
-          {tab === 'Plan' && <PlanTab beat={beat} />}
-          {tab === 'Activity' && <ActivityTrail />}
-          {tab === 'Request' && <RequestTab />}
+      <PageBody>
+        <div style={{ display: 'flex', gap: 'var(--space-8)' }}>
+          <MetaRail />
+          <div style={{ flex: 1, minWidth: 0, maxWidth: 980 }}>
+            <Tabs tab={tab} onSelect={setTab} />
+            {tab === 'Plan' && <PlanTab beat={beat} />}
+            {tab === 'Activity' && <ActivityTrail />}
+            {tab === 'Request' && <RequestTab />}
+          </div>
         </div>
-      </div>
+      </PageBody>
     </div>
   )
 }
 
 function Header() {
   return (
-    <div>
-      <div style={{ font: 'var(--fs-meta)', marginBottom: 'var(--space-2)' }}>
-        <Link to="/requests/4207" style={{ color: 'var(--ot-link)', textDecoration: 'none' }}>
-          Requests
-        </Link>
-        <span style={{ color: 'var(--ot-ink-3)' }}> › {marcus.requestId}</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <h1 style={{ font: 'var(--fs-page-title)' }}>Data subject request details</h1>
-          <StatusPill status="Agent fulfilling" />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <button
-            style={{
-              padding: '7px 14px',
-              borderRadius: 'var(--radius-control)',
-              border: '1px solid var(--ot-green)',
-              background: 'var(--ot-surface)',
-              color: 'var(--ot-green)',
-              font: '600 13px "Open Sans", sans-serif',
-              cursor: 'pointer',
-            }}
-          >
-            Results summary
-          </button>
+    <PageHeader
+      breadcrumb={[
+        { label: 'Requests', to: '/requests' },
+        { label: marcus.requestId },
+      ]}
+      title="Data subject request details"
+      status={<StatusPill status="Agent fulfilling" />}
+      actions={
+        <>
+          <PageAction variant="secondary">Results summary</PageAction>
           <span
             aria-hidden="true"
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 34,
-              height: 34,
-              borderRadius: 'var(--radius-control)',
+              width: 36,
+              height: 36,
+              borderRadius: 4,
               border: '1px solid var(--ot-border)',
               color: 'var(--ot-ink-2)',
               background: 'var(--ot-surface)',
@@ -138,9 +126,9 @@ function Header() {
           >
             <KebabIcon width={16} height={16} />
           </span>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    />
   )
 }
 
@@ -528,7 +516,6 @@ function RequestTab() {
           border: '1px solid var(--ot-border)',
           borderRadius: 'var(--radius-card)',
           padding: 'var(--space-2) var(--space-4)',
-          maxWidth: 640,
         }}
       >
         {rows.map(([label, value], i) => (
@@ -551,15 +538,16 @@ function RequestTab() {
 
       <div
         style={{
-          background: 'rgba(239, 59, 48, 0.05)',
-          border: '1px solid rgba(239, 59, 48, 0.3)',
+          background: 'var(--ot-danger-tint)',
+          border: '1px solid rgba(192, 57, 43, 0.3)',
           borderRadius: 'var(--radius-card)',
           padding: 'var(--space-4)',
-          maxWidth: 640,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
-          <span style={{ fontSize: 18 }}>⚠</span>
+          <span aria-hidden="true" style={{ display: 'flex', color: 'var(--ot-danger)' }}>
+            <WarningIcon width={18} height={18} />
+          </span>
           <h3 style={{ margin: 0, font: '600 14px "Open Sans", sans-serif', color: 'var(--ot-danger)' }}>
             Suspected Agent Detection
           </h3>

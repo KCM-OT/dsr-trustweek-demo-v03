@@ -184,6 +184,16 @@ export function CheckIcon(props) {
   )
 }
 
+export function WarningIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M10 3.2l7 12.3H3z" />
+      <path d="M10 8v3.4" />
+      <circle cx="10" cy="13.4" r="0.8" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 export function PersonIcon(props) {
   return (
     <svg {...base} {...props}>

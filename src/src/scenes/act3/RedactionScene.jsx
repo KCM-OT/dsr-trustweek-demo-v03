@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { marcus } from '../../data/fixtures'
 import { useCue, useSceneBeats } from '../../cue/CueContext'
 import { useDemoState } from '../../state/DemoStateContext'
 import { ConfidenceMeter } from '../../components/ConfidenceMeter'
 import { AgentMark } from '../../components/AgentMark'
+import { PageHeader, PageBody } from '../../shell/PageHeader'
 import { formatDate, formatDateTime } from './format'
 
 // Redaction summary — build spec §3.3. The privacy reviewer's sign-off
@@ -47,40 +48,30 @@ export function RedactionScene() {
   }, [])
 
   return (
-    <div style={{ padding: 'var(--space-6) var(--space-8)', maxWidth: 980 }}>
-      <div style={{ font: 'var(--fs-meta)', marginBottom: 'var(--space-2)' }}>
-        <Link to="/requests/4207" style={{ color: 'var(--ot-link)', textDecoration: 'none' }}>
-          Requests
-        </Link>
-        <span style={{ color: 'var(--ot-ink-3)' }}> › {marcus.requestId}</span>
-      </div>
+    <div>
+      <PageHeader
+        breadcrumb={[{ label: 'Requests', to: '/requests' }, { label: marcus.requestId }]}
+        title="Redaction complete — awaiting your sign-off"
+        description={
+          <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, maxWidth: 860 }}>
+            <AgentMark size={13} style={{ alignSelf: 'center' }} />
+            <span>
+              Source: {marcus.redaction.source} included in the access package. I redacted other people's personal
+              information per SOP §4.2. Review my work below.
+            </span>
+          </span>
+        }
+      />
 
-      <h1 style={{ font: 'var(--fs-page-title)', marginBottom: 'var(--space-2)' }}>
-        Redaction complete — awaiting your sign-off
-      </h1>
-      <p
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 8,
-          font: 'var(--fs-body)',
-          color: 'var(--ot-ink-2)',
-          marginBottom: 'var(--space-6)',
-          maxWidth: 760,
-        }}
-      >
-        <AgentMark size={13} style={{ alignSelf: 'center' }} />
-        <span>
-          Source: {marcus.redaction.source} included in the access package. I redacted other people's personal
-          information per SOP §4.2. Review my work below.
-        </span>
-      </p>
+      <PageBody>
+        <div style={{ maxWidth: 1060 }}>
+          <FindingsTable openCategory={openCategory} onToggle={setOpenCategory} />
 
-      <FindingsTable openCategory={openCategory} onToggle={setOpenCategory} />
+          <SignOffFooter approved={redactionApproved} onApprove={approveRedaction} />
 
-      <SignOffFooter approved={redactionApproved} onApprove={approveRedaction} />
-
-      {beat >= 1 && <ReportReadyCard onOpen={() => navigate('/report')} />}
+          {beat >= 1 && <ReportReadyCard onOpen={() => navigate('/report')} />}
+        </div>
+      </PageBody>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSceneBeats } from '../../cue/CueContext'
 import { AgentMark } from '../../components/AgentMark'
 import { QueueTable } from '../../shell/QueueTable'
+import { PageHeader, PageBody, PageAction } from '../../shell/PageHeader'
 import { queue } from '../../data/fixtures'
 import {
   TIMEFRAMES,
@@ -58,64 +59,41 @@ export function DashboardScene() {
   }
 
   return (
-    <div style={{ padding: 'var(--space-8)' }}>
-      <PageHeader />
+    <div>
+      <PageHeader
+        title="Dashboard"
+        description="Your privacy request program at a glance — throughput, fulfilment, and what needs a human."
+        actions={<PageAction>Create request</PageAction>}
+      />
 
-      <AISummaryBanner timeframe={timeframe} stats={stats} awaiting={awaitingLive} onViewAttention={scrollToAttention} />
+      <PageBody>
+        <AISummaryBanner timeframe={timeframe} stats={stats} awaiting={awaitingLive} onViewAttention={scrollToAttention} />
 
-      <TimeframeControl value={timeframe} onChange={setTimeframe} />
+        <TimeframeControl value={timeframe} onChange={setTimeframe} />
 
-      <StatRow stats={stats} awaiting={awaitingLive} onAwaitingClick={scrollToAttention} />
+        <StatRow stats={stats} awaiting={awaitingLive} onAwaitingClick={scrollToAttention} />
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.6fr) minmax(280px, 1fr)',
-          gap: 'var(--space-4)',
-          marginTop: 'var(--space-4)',
-          alignItems: 'start',
-        }}
-      >
-        <Card>
-          <TrendChart data={stats.chart} />
-        </Card>
-        <Card>
-          <Distribution />
-        </Card>
-      </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1.6fr) minmax(280px, 1fr)',
+            gap: 'var(--space-4)',
+            marginTop: 'var(--space-4)',
+            alignItems: 'start',
+          }}
+        >
+          <Card>
+            <TrendChart data={stats.chart} />
+          </Card>
+          <Card>
+            <Distribution />
+          </Card>
+        </div>
 
-      <QueueSection />
+        <QueueSection />
 
-      <NeedsAttention onResolve={handleResolve} />
-    </div>
-  )
-}
-
-// --- Page header (shell grammar §0) -----------------------------------------
-
-function PageHeader() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
-      <div>
-        <h1 style={{ font: 'var(--fs-page-title)', color: 'var(--ot-ink)' }}>Dashboard</h1>
-        <p style={{ font: 'var(--fs-body)', color: 'var(--ot-ink-2)', marginTop: 4 }}>
-          Your privacy request program at a glance — throughput, fulfilment, and what needs a human.
-        </p>
-      </div>
-      <button
-        style={{
-          flexShrink: 0,
-          padding: '9px 16px',
-          borderRadius: 'var(--radius-control)',
-          border: 'none',
-          background: 'var(--ot-green)',
-          color: '#fff',
-          font: '600 14px "Open Sans", sans-serif',
-          cursor: 'pointer',
-        }}
-      >
-        Create request
-      </button>
+        <NeedsAttention onResolve={handleResolve} />
+      </PageBody>
     </div>
   )
 }
@@ -130,7 +108,6 @@ function AISummaryBanner({ stats, awaiting, onViewAttention }) {
         display: 'flex',
         alignItems: 'flex-start',
         gap: 'var(--space-4)',
-        marginTop: 'var(--space-6)',
         padding: 'var(--space-4) var(--space-6)',
         background: 'linear-gradient(180deg, var(--ot-agent-tint), #f7f5ff)',
         border: '1px solid #e4dcfb',
