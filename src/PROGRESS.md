@@ -714,6 +714,53 @@ Verified on a preview deployment: `/`, `/setup`, `/dashboard`,
 rewrite live), plus the woff2, PDF, and page PNGs; `/report` loads 16
 images with none broken and `document.fonts` reports Outfit `loaded`.
 
+### 3.5c — Publish fix: root `vercel.json` shim
+
+Setting Root Directory fixed **CLI** deploys but Publish still failed with
+`vite: command not found` (exit 127). Cause: **v0's Publish builds from
+the repo root and does not apply the dashboard Root Directory setting.**
+Proof was in the log diff — the CLI build ran `Installing dependencies…`
+then `pnpm run build`, while Publish ran no install at all and invoked the
+framework preset's raw `vite build`. Vercel only uses `<pm> run build`
+when it finds a `package.json` with a `build` script, so on Publish it was
+never looking inside `src/`: no install, no `node_modules/.bin`, no vite
+on PATH.
+
+Fixed with a **root `vercel.json`** — config travels with the repo, so it
+applies identically to Publish and CLI:
+
+```json
+{ "installCommand": "cd src && npm ci",
+  "buildCommand":   "cd src && npm run build",
+  "outputDirectory": "src/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
+```
+
+All dashboard overrides (rootDirectory / framework / build / install /
+output) were then **cleared to null** so the file is the single source of
+truth and nothing can silently diverge again. The rewrite is duplicated
+from `src/vercel.json` because that nested file is only read when the
+build root is `src/` — the root copy is what's live now.
+
+**npm, not pnpm, in the shim.** First attempt used pnpm and failed:
+`WARN Ignoring not compatible lockfile … ERROR Headless installation
+requires a pnpm-lock.yaml file`. With no lockfile at the repo root Vercel
+detects **npm** and provisions a pnpm too old to read this repo's
+`lockfileVersion 9.0`. Both `pnpm-lock.yaml` and `package-lock.json` are
+committed in `src/` and both agree with `package.json`, so `npm ci` is the
+one that works unattended. (Aside: `vercel api`'s `-d` is the global
+*debug* flag — a PATCH with `-d` sends no body and silently no-ops; use
+`--input -`. And don't pipe `2>&1` into a file you intend to parse as
+JSON, since the CLI banner corrupts it.)
+
+Verified by deploying with Root Directory unset — i.e. reproducing
+Publish's exact conditions — and reading the build log back: `npm ci`
+added 66 packages, `vite build` transformed 73 modules, no font warning.
+All routes 200 (`/`, `/setup`, `/dashboard`, `/requests`,
+`/requests/4207`, `/requests/4207/redaction`, `/report`) plus the woff2
+(32 KB), PDF (234 KB), and `page-1`/`page-9` PNGs; app boots in-browser
+with the 3.5 header band intact.
+
 **Open:** the project has SSO deployment protection
 (`all_except_custom_domains`), so every `*.vercel.app` URL demands a
 Vercel team login — a demo audience would hit an auth wall, not the deck.
