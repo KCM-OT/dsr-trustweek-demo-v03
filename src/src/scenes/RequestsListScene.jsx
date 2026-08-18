@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { queue } from '../data/fixtures'
 import { StatusPill } from '../components/StatusPill'
@@ -30,24 +30,22 @@ function augmentQueueWithSpamDetection(queueData, rejectedIds = new Set()) {
 }
 
 export function RequestsListScene() {
-  const beatIndex = useSceneBeats('requests-list', 'Requests queue', [
-    'Request table loaded',
-    'Agent panel opens',
-    'Analyzing incoming requests',
-    'Duplicate request identified',
-    'Rejecting duplicate request',
-  ])
-  const { advance } = useCue()
-
-  React.useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.key === 'ArrowRight' || e.key === ' ') && beatIndex === 4) {
-        advance()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [beatIndex, advance])
+  const { jumpToBeat } = useCue()
+  const beatIndex = useSceneBeats(
+    'requests-list',
+    'Requests queue',
+    [
+      'Request table loaded',
+      'Agent panel opens',
+      'Analyzing incoming requests',
+      'Duplicate request identified',
+      'Rejecting duplicate request',
+    ],
+    // After the last Act 3 queue beat, the next cue returns to page 14:
+    // the initial request-table-loaded state, rather than clamping on the
+    // rejection beat. This keeps Space and ArrowRight interchangeable.
+    () => jumpToBeat(0),
+  )
 
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
