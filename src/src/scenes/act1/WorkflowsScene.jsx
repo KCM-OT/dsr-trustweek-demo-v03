@@ -40,8 +40,8 @@ const WORKFLOWS = [
     name: 'Correction',
     requestType: 'Correct',
     systems: ['Salesforce', 'Marketo', 'Zendesk'],
-    steps: 1,
-    description: 'Update source records where data lives',
+    steps: 4,
+    description: 'Validate, update, and confirm source records where data lives',
   },
 ]
 
