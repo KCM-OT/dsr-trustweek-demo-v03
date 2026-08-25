@@ -21,23 +21,32 @@ import {
 import { PageHeader, PageBody, PageAction } from '../../shell/PageHeader'
 import { ActivityTrail } from './ActivityTrail'
 import { formatDate, formatDateTime } from './format'
+import { getWorkflowByName } from '../../data/workflows'
 
-// Request detail — agent plan view (build spec §3.1). Keeps the real page
-// skeleton from reference/pra_request_detail.png: breadcrumb, title + stage
-// pill, Results summary + kebab, left metadata rail with edit pencils,
-// green-underline tabs. Where today's blue chevron stage bar sits, the
-// agent plan + reasoning panels take that exact slot — the before/after
-// moment. All copy verbatim from 03_demo_script.md Act 3; all data from
-// fixtures §marcus.
+// Request detail — agent workflow view (build spec §3.1). Keeps the real
+// page skeleton from reference/pra_request_detail.png: breadcrumb, title +
+// stage pill, Results summary + kebab, left metadata rail with edit
+// pencils, green-underline tabs. Where today's blue chevron stage bar sits,
+// the selected workflow + reasoning panels take that exact slot — the
+// before/after moment. All copy verbatim from 03_demo_script.md Act 3; all
+// data from fixtures §marcus.
+//
+// The "Workflow" tab shows which of Act 1's four generated workflows
+// (data/workflows.js, beat 10) is running this request — matched here by
+// marcus.type ("Access") — then its steps as the request's subtasks get
+// processed. Step 5 is the demo's payoff: verifying Alpine Rewards history
+// turns up a hit, which flags the step to the privacy team before Daniel
+// Okafor's data even lands, and it's that same step that hands off into
+// Act 3's agent collaboration (split screen).
 
 const BEATS = [
   'Request detail, initial state',
   'Initial state',
-  'Plan appears (staggered)',
+  'Workflow steps appear (staggered)',
   'Reasoning: Classification opens',
   'Reasoning: Obligations opens',
   'Reasoning: Your context opens',
-  'Fast-forward — items 1–4 done, item 5 awaiting human',
+  'Fast-forward — items 1–4 done, item 5 flagged for privacy review',
   'Hand off → split screen',
 ]
 
@@ -59,7 +68,7 @@ export function RequestDetailScene() {
   const beat = useSceneBeats('request-detail', 'Request detail — Marcus Bell', BEATS, null, () =>
     navigate('/intake', { state: { resume: 'pre-submit' } })
   )
-  const [tab, setTab] = useState('Plan')
+  const [tab, setTab] = useState('Workflow')
 
   // Entered with a requested beat (the split screen's back-exit returns
   // here at beat 5, the fast-forward state); number key 3 still lands on 0.
@@ -74,7 +83,7 @@ export function RequestDetailScene() {
     if (beat === 0) {
       setTab('Request')
     } else if (beat === 1) {
-      setTab('Plan')
+      setTab('Workflow')
     } else if (beat === HANDOFF_BEAT) {
       navigate('/requests/4207/subtask')
     }
@@ -88,7 +97,7 @@ export function RequestDetailScene() {
           <MetaRail />
           <div style={{ flex: 1, minWidth: 0, maxWidth: 980 }}>
             <Tabs tab={tab} onSelect={setTab} />
-            {tab === 'Plan' && <PlanTab beat={beat} />}
+            {tab === 'Workflow' && <WorkflowTab beat={beat} />}
             {tab === 'Activity' && <ActivityTrail />}
             {tab === 'Request' && <RequestTab />}
           </div>
@@ -198,7 +207,7 @@ function RailRow({ label, value, editable }) {
   )
 }
 
-const TABS = ['Plan', 'Activity', 'Request']
+const TABS = ['Workflow', 'Activity', 'Request']
 
 function Tabs({ tab, onSelect }) {
   return (
@@ -235,30 +244,92 @@ function Tabs({ tab, onSelect }) {
   )
 }
 
-// --- Plan tab: execution plan (left) + reasoning panel (right) --------------
+// --- Workflow tab: selected workflow + its steps (left), reasoning (right) --
 
-function PlanTab({ beat }) {
+function WorkflowTab({ beat }) {
   return (
     <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
-      <div style={{ flex: 1, minWidth: 0 }}>{beat >= 1 && <PlanPanel beat={beat} />}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {beat >= 1 && (
+          <>
+            <SelectedWorkflowCard />
+            <WorkflowStepsPanel beat={beat} />
+          </>
+        )}
+      </div>
       <ReasoningPanel beat={beat} />
     </div>
   )
 }
 
-// Per-beat plan-item state. Before the fast-forward (beat 6) the agent is
-// mid-flight: item 1 running, the rest planned. At beat 6 the fixture
-// statuses land — items 1–4 done (with timestamps), item 5 awaiting human.
+// The workflow this request is running — one of the four drafted at Act
+// 1's capstone (beat 10, WorkflowsScene), looked up by marcus.type
+// ("Access"). Ties the two capstones together: what was generated there
+// is what's executing here.
+function SelectedWorkflowCard() {
+  const workflow = getWorkflowByName(marcus.type)
+  if (!workflow) return null
+  return (
+    <div
+      className="anim-enter"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-3)',
+        background: 'var(--ot-surface)',
+        border: '1px solid var(--ot-border)',
+        borderRadius: 'var(--radius-card)',
+        padding: 'var(--space-3) var(--space-4)',
+        marginBottom: 'var(--space-4)',
+      }}
+    >
+      <span
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 34,
+          height: 34,
+          flexShrink: 0,
+          background: '#f4f3f3',
+          borderRadius: 6,
+        }}
+      >
+        <img src="/figma/chart-diagram.svg" alt="" width="16" height="16" />
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ font: 'var(--fs-meta)', color: 'var(--ot-ink-3)', marginBottom: 2 }}>
+          Workflow · selected from Generated workflows
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <span style={{ font: '600 14px "Open Sans", sans-serif', color: 'var(--ot-ink)' }}>{workflow.name}</span>
+          <GroundingChip label={workflow.requestType} />
+        </div>
+        <div style={{ font: '400 12.5px/18px "Open Sans", sans-serif', color: 'var(--ot-ink-3)', marginTop: 2 }}>
+          {workflow.description}
+        </div>
+      </div>
+      <StatusPill status="In progress" />
+    </div>
+  )
+}
+
+// Per-beat step state. Before the fast-forward (beat 6) the agent is
+// mid-flight: step 1 running, the rest planned. At beat 6 the fixture
+// statuses land — steps 1–4 done (with timestamps), step 5 awaiting human
+// and flagged for privacy review.
 function itemState(item, beat) {
   if (beat < 6) {
     return item.id === 1 ? { status: 'Running' } : { status: 'Planned' }
   }
   if (item.status === 'done') return { status: 'Done', timestamp: formatDateTime(item.completedAt), note: item.note }
-  if (item.status === 'awaitingHuman') return { status: 'Awaiting human', detail: `In progress with ${item.assignee}` }
+  if (item.status === 'awaitingHuman') {
+    return { status: 'Awaiting human', detail: `In progress with ${item.assignee}`, flag: item.flag }
+  }
   return { status: 'Planned' }
 }
 
-function PlanPanel({ beat }) {
+function WorkflowStepsPanel({ beat }) {
   const navigate = useNavigate()
 
   return (
@@ -338,6 +409,22 @@ function PlanPanel({ beat }) {
               )}
               {s.detail && (
                 <span style={{ font: 'var(--fs-meta)', color: 'var(--ot-warn)' }}>{s.detail}</span>
+              )}
+              {s.flag && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    font: '600 11px "Open Sans", sans-serif',
+                    color: 'var(--ot-danger)',
+                    textAlign: 'right',
+                    maxWidth: 200,
+                  }}
+                >
+                  <WarningIcon width={12} height={12} style={{ flexShrink: 0 }} />
+                  {s.flag}
+                </span>
               )}
               {s.note && (
                 <button

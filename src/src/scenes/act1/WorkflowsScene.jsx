@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSceneBeats } from '../../cue/CueContext'
 import { StatusPill } from '../../components/StatusPill'
 import { PageHeader, PageBody, PageAction } from '../../shell/PageHeader'
+import { WORKFLOWS } from '../../data/workflows'
 
 // Act 1 capstone, beat 10 — the flow chart's four lanes (opt-out, access,
 // deletion, correction — src/scenes/act1/FlowChartScene.jsx LANE_TAGS)
@@ -9,41 +10,11 @@ import { PageHeader, PageBody, PageAction } from '../../shell/PageHeader'
 // beat as the flow chart itself, just the list view of the same output: a
 // human still has to open and approve each one, hence every row starts
 // "Ready for review" rather than live.
-
-const WORKFLOWS = [
-  {
-    id: 'wf-opt-out',
-    name: 'Opt-out',
-    requestType: 'Do Not Sell/Share, Opt-out of marketing',
-    systems: ['Marketo'],
-    steps: 1,
-    description: 'Suppress marketing preferences across systems',
-  },
-  {
-    id: 'wf-access',
-    name: 'Access',
-    requestType: 'Access / Know',
-    systems: ['Internal warehouse', 'Salesforce', 'Marketo', 'Zendesk'],
-    steps: 6,
-    description: 'Retrieve, redact, and review personal data before delivery',
-  },
-  {
-    id: 'wf-deletion',
-    name: 'Deletion',
-    requestType: 'Delete',
-    systems: ['Salesforce', 'Marketo', 'Zendesk', 'Internal warehouse', 'Legal'],
-    steps: 5,
-    description: 'Delete data across all systems; route edge cases to legal',
-  },
-  {
-    id: 'wf-correction',
-    name: 'Correction',
-    requestType: 'Correct',
-    systems: ['Salesforce', 'Marketo', 'Zendesk'],
-    steps: 4,
-    description: 'Validate, update, and confirm source records where data lives',
-  },
-]
+//
+// WORKFLOWS itself lives in data/workflows.js — Act 3's request detail
+// (RequestDetailScene) looks the same four rows up by request type, to
+// show which workflow drafted here is the one actually running a given
+// request.
 
 const cardStyle = {
   background: 'var(--ot-surface)',

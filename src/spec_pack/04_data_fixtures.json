@@ -120,11 +120,12 @@
    },
    {
     "id": 5,
-    "title": "Warehouse extract — transactions + Alpine Rewards history",
+    "title": "Verify Alpine Rewards history",
     "system": "Internal warehouse",
     "status": "awaitingHuman",
     "assignee": "Daniel Okafor",
     "ticket": "SNOW-88412",
+    "flag": "Alpine Rewards history found — flagged to privacy team for review",
     "grounding": [
      "Customer Data Flows"
     ]
