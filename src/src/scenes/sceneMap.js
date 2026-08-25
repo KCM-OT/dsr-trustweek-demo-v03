@@ -28,15 +28,6 @@ export const SCENES = [
     numberKey: '2',
   },
   {
-    id: 'requests-list',
-    route: '/requests',
-    label: 'Requests',
-    act: 'Act 3',
-    shell: true,
-    navLabel: 'Requests',
-    numberKey: '3',
-  },
-  {
     id: 'request-detail',
     route: '/requests/4207',
     label: 'Request detail — Marcus Bell',

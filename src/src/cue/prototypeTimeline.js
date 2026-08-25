@@ -26,20 +26,6 @@ const JOURNEY_SCENES = [
     beats: ['Initial state', 'Identity autofilled', 'Assistant exchange', 'California note + submit'],
   },
   {
-    sceneId: 'requests-list',
-    route: '/requests',
-    act: 'Act 3',
-    sceneLabel: 'Requests queue',
-    tone: 'platform',
-    beats: [
-      'Request table loaded',
-      'Agent panel opens',
-      'Analyzing incoming requests',
-      'Duplicate request identified',
-      'Rejecting duplicate request',
-    ],
-  },
-  {
     sceneId: 'request-detail',
     route: '/requests/4207',
     act: 'Act 3',

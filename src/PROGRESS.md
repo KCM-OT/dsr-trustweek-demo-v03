@@ -839,6 +839,20 @@ the repo root would remove the whole class of problem and let both Publish
 and the preview panel work by default, with no shims to maintain. Worth
 doing before more tooling trips over it.
 
+### 3.5f — Removed Act 3 request queue beats 14–18
+
+Removed the five-beat `requests-list` / “Requests queue” scene from the
+canonical `prototypeTimeline.js` (pages 14–18), removed its corresponding
+`sceneMap.js` entry and `App.jsx` component import/map entry, and deleted
+`scenes/RequestsListScene.jsx`. The now-obsolete Space/ArrowRight wrap
+handler disappeared with the scene. A full source search finds no remaining
+queue scene IDs, labels, beat labels, or component references; production
+build passes with 72 transformed modules.
+
+Adjacent Act 1 → Act 2 navigation was verified in-browser at the presenter
+viewport; the cue rail now moves directly from the flow-chart capstone into
+Meridian intake, with the removed five cards absent.
+
 ## Session 3 original brief (for reference)
 
 Per `spec_pack/README.md`: setup agent conversation (`/setup`, 7 cues +

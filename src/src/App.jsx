@@ -10,7 +10,6 @@ import { BlankScene } from './scenes/BlankScene'
 import { DemoStateProvider } from './state/DemoStateContext'
 import { SetupScene } from './scenes/act1/SetupScene'
 import { FlowChartScene } from './scenes/act1/FlowChartScene'
-import { RequestsListScene } from './scenes/RequestsListScene'
 import { RequestDetailScene } from './scenes/act3/RequestDetailScene'
 import { SplitScreenScene } from './scenes/act3/SplitScreenScene'
 import { RedactionScene } from './scenes/act3/RedactionScene'
@@ -30,7 +29,6 @@ const STANDALONE_COMPONENTS = {
 const SHELL_COMPONENTS = {
   setup: SetupScene,
   'setup-flow': FlowChartScene,
-  'requests-list': RequestsListScene,
   'request-detail': RequestDetailScene,
   'request-subtask': SplitScreenScene,
   'request-redaction': RedactionScene,
