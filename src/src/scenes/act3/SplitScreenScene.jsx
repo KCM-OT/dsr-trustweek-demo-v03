@@ -74,9 +74,10 @@ export function SplitScreenScene() {
     BEATS,
     // Redaction summary is "entered by cue" (build spec §3.3): advancing
     // past the sync hands off. ← on beat 0 returns to the request detail
-    // at its fast-forward state (beat 5, the state that opened this door).
+    // at its fast-forward state (beat 3, the state that opened this door —
+    // RequestDetailScene.FAST_FORWARD_BEAT).
     () => navigate('/requests/4207/redaction'),
-    () => navigate('/requests/4207', { state: { beat: 5 } })
+    () => navigate('/requests/4207', { state: { beat: 3 } })
   )
 
   // Entered with a requested beat (the redaction summary's back-exit

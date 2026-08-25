@@ -42,10 +42,7 @@ const JOURNEY_SCENES = [
     beats: [
       'Request detail, initial state',
       'Initial state',
-      'Plan appears',
-      'Classification reasoning',
-      'Obligations reasoning',
-      'Your context reasoning',
+      'Workflow steps appear',
       'Items 1–4 complete',
       'Handoff to split screen',
     ],

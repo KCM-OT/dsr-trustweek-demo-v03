@@ -8,8 +8,6 @@ import { AgentMark } from '../../components/AgentMark'
 import {
   PencilIcon,
   KebabIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
   IdBadgeIcon,
   CloudIcon,
   MegaphoneIcon,
@@ -43,14 +41,16 @@ const BEATS = [
   'Request detail, initial state',
   'Initial state',
   'Workflow steps appear (staggered)',
-  'Reasoning: Classification opens',
-  'Reasoning: Obligations opens',
-  'Reasoning: Your context opens',
   'Fast-forward — items 1–4 done, item 5 flagged for privacy review',
   'Hand off → split screen',
 ]
 
-const HANDOFF_BEAT = 7
+const HANDOFF_BEAT = 4
+// The workflow's steps are pre-determined by the matched workflow itself
+// (data/workflows.js), not "planned" per request — so this scene has no
+// separate reasoning/plan-explanation beat. Fast-forward now lands one
+// beat earlier than before.
+const FAST_FORWARD_BEAT = 3
 
 const PLAN_ICONS = {
   'ID verification': IdBadgeIcon,
@@ -244,20 +244,20 @@ function Tabs({ tab, onSelect }) {
   )
 }
 
-// --- Workflow tab: selected workflow + its steps (left), reasoning (right) --
+// --- Workflow tab: selected workflow + its steps ---------------------------
+// The workflow determines the steps and tasks a request runs — there's no
+// separate "how I planned this" explanation, since the steps aren't planned
+// per request, they come from the matched workflow (data/workflows.js).
 
 function WorkflowTab({ beat }) {
   return (
-    <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {beat >= 1 && (
-          <>
-            <SelectedWorkflowCard />
-            <WorkflowStepsPanel beat={beat} />
-          </>
-        )}
-      </div>
-      <ReasoningPanel beat={beat} />
+    <div style={{ maxWidth: 640 }}>
+      {beat >= 1 && (
+        <>
+          <SelectedWorkflowCard />
+          <WorkflowStepsPanel beat={beat} />
+        </>
+      )}
     </div>
   )
 }
@@ -314,12 +314,12 @@ function SelectedWorkflowCard() {
   )
 }
 
-// Per-beat step state. Before the fast-forward (beat 6) the agent is
-// mid-flight: step 1 running, the rest planned. At beat 6 the fixture
+// Per-beat step state. Before the fast-forward the agent is mid-flight:
+// step 1 running, the rest planned. At FAST_FORWARD_BEAT the fixture
 // statuses land — steps 1–4 done (with timestamps), step 5 awaiting human
 // and flagged for privacy review.
 function itemState(item, beat) {
-  if (beat < 6) {
+  if (beat < FAST_FORWARD_BEAT) {
     return item.id === 1 ? { status: 'Running' } : { status: 'Planned' }
   }
   if (item.status === 'done') return { status: 'Done', timestamp: formatDateTime(item.completedAt), note: item.note }
@@ -391,8 +391,8 @@ function WorkflowStepsPanel({ beat }) {
             {/* Keyed by beat-phase so the fast-forward flip re-enters with a
                 stagger — status flips land 450ms apart, visibly (README #3). */}
             <div
-              key={`${item.id}-${beat >= 5 ? 'ff' : 'pre'}`}
-              className={beat >= 5 ? 'anim-enter' : undefined}
+              key={`${item.id}-${beat >= FAST_FORWARD_BEAT ? 'ff' : 'pre'}`}
+              className={beat >= FAST_FORWARD_BEAT ? 'anim-enter' : undefined}
               style={{
                 '--stagger-i': i,
                 '--stagger-step': '450ms',
@@ -442,136 +442,6 @@ function WorkflowStepsPanel({ beat }) {
                 </button>
               )}
             </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// --- Reasoning panel ---------------------------------------------------------
-
-// Verbatim from 03_demo_script.md Act 3, CUE 2–4. Audit register: no
-// avatars, no chat bubbles — short lines, each carrying its source chip.
-const REASONING = [
-  {
-    title: 'Classification',
-    beat: 3,
-    lines: [
-      { text: 'Access request · Consumer · California resident → CCPA/CPRA governs' },
-      { text: 'Verified: Marcus is an active Northwind customer and Alpine Rewards member' },
-    ],
-    chips: ['CCPA/CPRA', 'Intake AR-4207'],
-  },
-  {
-    title: 'Obligations',
-    beat: 4,
-    lines: [
-      { text: 'Verify identity before disclosure', chip: 'CCPA §1798.130' },
-      { text: 'Respond within 45 days (one 45-day extension available)', chip: 'CCPA §1798.130' },
-      {
-        text: 'Disclose: categories, sources, purposes, third parties, and specific pieces of personal information',
-        chip: 'CCPA §1798.110',
-      },
-    ],
-  },
-  {
-    title: 'Your context',
-    beat: 5,
-    lines: [
-      { text: "Marcus's data lives in: Salesforce, Marketo, Zendesk, internal warehouse", chip: 'Customer Data Flows' },
-      {
-        text: 'Support transcripts require third-party redaction with privacy sign-off before disclosure',
-        chip: 'SOP §4.2',
-      },
-      {
-        text: "Response follows Meridian letter structure, plain and warm, in the requester's language",
-        chip: 'Brand + Tone Guide',
-      },
-    ],
-  },
-]
-
-function ReasoningPanel({ beat }) {
-  // Cues open sections in sequence; after that they stay freely
-  // click-toggleable ([CUE] then [CLICK]). User toggles reset on beat
-  // change so stepping back always reproduces the scripted state.
-  const [overrides, setOverrides] = useState({})
-  useEffect(() => setOverrides({}), [beat])
-
-  return (
-    <div
-      style={{
-        width: 400,
-        flexShrink: 0,
-        background: 'var(--ot-surface)',
-        border: '1px solid var(--ot-border)',
-        borderRadius: 'var(--radius-card)',
-        padding: 'var(--space-4)',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          font: 'var(--fs-section)',
-          color: 'var(--ot-ink)',
-          paddingBottom: 'var(--space-3)',
-          borderBottom: '1px solid var(--ot-border)',
-        }}
-      >
-        <AgentMark size={15} />
-        How I planned this request
-      </div>
-
-      {REASONING.map((section) => {
-        const open = overrides[section.title] ?? beat >= section.beat
-        return (
-          <div key={section.title} style={{ borderBottom: '1px solid var(--ot-border)' }}>
-            <button
-              onClick={() => setOverrides((o) => ({ ...o, [section.title]: !open }))}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                padding: '12px 0',
-                border: 'none',
-                background: 'none',
-                font: '600 14px "Open Sans", sans-serif',
-                color: 'var(--ot-ink)',
-                cursor: 'pointer',
-              }}
-            >
-              {section.title}
-              <span style={{ color: 'var(--ot-ink-3)', display: 'flex' }}>
-                {open ? <ChevronDownIcon width={16} height={16} /> : <ChevronRightIcon width={16} height={16} />}
-              </span>
-            </button>
-            {open && (
-              <div className="anim-enter" style={{ paddingBottom: 'var(--space-3)' }}>
-                {section.lines.map((line) => (
-                  <div key={line.text} style={{ padding: '5px 0' }}>
-                    <span style={{ font: '400 13.5px/1.5 "Open Sans", sans-serif', color: 'var(--ot-ink-2)' }}>
-                      {line.text}
-                    </span>
-                    {line.chip && (
-                      <span style={{ marginLeft: 8 }}>
-                        <GroundingChip label={line.chip} />
-                      </span>
-                    )}
-                  </div>
-                ))}
-                {section.chips && (
-                  <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                    {section.chips.map((c) => (
-                      <GroundingChip key={c} label={c} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )
       })}
