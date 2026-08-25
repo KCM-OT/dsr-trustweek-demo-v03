@@ -20,6 +20,13 @@ export const SCENES = [
     shell: true,
   },
   {
+    id: 'setup-workflows',
+    route: '/setup/workflows',
+    label: 'Generated workflows',
+    act: 'Act 1 capstone',
+    shell: true,
+  },
+  {
     id: 'intake',
     route: '/intake',
     label: 'Meridian intake agent',

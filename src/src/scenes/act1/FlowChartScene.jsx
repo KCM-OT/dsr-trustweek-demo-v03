@@ -292,14 +292,15 @@ function laneDimmed(focus, lane) {
 export function FlowChartScene() {
   const navigate = useNavigate()
   // Single-beat [CLICK] scene, but never a cue dead-end: advancing continues
-  // the demo into Act 2 (/intake); stepping back returns to the setup
-  // conversation at its final pre-handoff state (beat 6 — beat 7 would
-  // immediately hand off here again).
+  // to the generated workflows list (/setup/workflows) — the flow chart's
+  // four lanes turned into individual, reviewable workflows; stepping back
+  // returns to the setup conversation at its final pre-handoff state (beat
+  // 6 — beat 7 would immediately hand off here again).
   useSceneBeats(
     'setup-flow',
     'Generated flow chart',
     ['Flow chart (interactive)'],
-    () => navigate('/intake'),
+    () => navigate('/setup/workflows'),
     () => navigate('/setup', { state: { beat: 6 } })
   )
 

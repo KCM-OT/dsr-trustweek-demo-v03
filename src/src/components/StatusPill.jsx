@@ -25,6 +25,9 @@ const STATUS_STYLES = {
   Pending: OUTLINED('var(--ot-ink-3)'),
   Configuring: OUTLINED('var(--ot-agent)'),
   Connected: TINTED('var(--ot-green)', 'var(--ot-green-tint)'),
+  // Workflow generation (Act 1 capstone) — awaiting a human look before
+  // going live, same register as "Awaiting human".
+  'Ready for review': OUTLINED('var(--ot-warn)'),
   // Platform grammar (from the reference screenshots)
   New: OUTLINED('var(--ot-warn)'),
   'In progress': OUTLINED('var(--ot-link)'),

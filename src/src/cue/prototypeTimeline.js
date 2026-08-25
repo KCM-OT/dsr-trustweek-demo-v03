@@ -18,6 +18,14 @@ const JOURNEY_SCENES = [
   },
   { sceneId: 'setup-flow', route: '/setup/flow', act: 'Act 1', sceneLabel: 'Generated flow chart', tone: 'agent', beats: ['Flow chart (interactive)'] },
   {
+    sceneId: 'setup-workflows',
+    route: '/setup/workflows',
+    act: 'Act 1',
+    sceneLabel: 'Generated workflows',
+    tone: 'agent',
+    beats: ['Workflows generated'],
+  },
+  {
     sceneId: 'intake',
     route: '/intake',
     act: 'Act 2',
