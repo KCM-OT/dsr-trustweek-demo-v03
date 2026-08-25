@@ -255,6 +255,7 @@ function WorkflowTab({ beat }) {
       {beat >= 1 && (
         <>
           <SelectedWorkflowCard />
+          <WorkflowStageChevron beat={beat} />
           <WorkflowStepsPanel beat={beat} />
         </>
       )}
@@ -310,6 +311,62 @@ function SelectedWorkflowCard() {
         </div>
       </div>
       <StatusPill status="In progress" />
+    </div>
+  )
+}
+
+// Stage bar — occupies the same "where is this request in its process"
+// role as the legacy blue chevron stage bar this scene's skeleton is based
+// on, just driven by the matched workflow's steps (marcus.plan) instead of
+// a fixed New/In Progress/Closed lifecycle: one chevron per step, done
+// steps green, the current step blue, everything ahead outlined gray.
+function WorkflowStageChevron({ beat }) {
+  const total = marcus.plan.length
+  const states = marcus.plan.map((item) => itemState(item, beat).status)
+  let currentIndex = states.findIndex((s) => s !== 'Done')
+  if (currentIndex === -1) currentIndex = total - 1
+  const currentItem = marcus.plan[currentIndex]
+
+  return (
+    <div className="anim-enter" style={{ marginBottom: 'var(--space-4)' }}>
+      <div style={{ display: 'flex', gap: 3, height: 30 }}>
+        {marcus.plan.map((item, i) => {
+          const done = states[i] === 'Done'
+          const current = i === currentIndex
+          const clipPath =
+            total === 1
+              ? undefined
+              : i === 0
+                ? 'polygon(0 0, 85% 0, 100% 50%, 85% 100%, 0 100%)'
+                : i === total - 1
+                  ? 'polygon(15% 0, 100% 0, 100% 100%, 15% 100%, 0 50%)'
+                  : 'polygon(15% 0, 85% 0, 100% 50%, 85% 100%, 15% 100%, 0 50%)'
+          return (
+            <div
+              key={item.id}
+              title={item.title}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                clipPath,
+                background: done ? 'var(--ot-green)' : current ? 'var(--ot-link)' : 'var(--ot-bg)',
+                border: done || current ? 'none' : '1px solid var(--ot-border)',
+                color: done || current ? '#fff' : 'var(--ot-ink-3)',
+                font: '600 12px "Open Sans", sans-serif',
+              }}
+            >
+              {i + 1}
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ marginTop: 6, font: 'var(--fs-meta)', color: 'var(--ot-ink-2)' }}>
+        Step {currentIndex + 1} of {total} ·{' '}
+        <span style={{ color: 'var(--ot-link)', fontWeight: 600 }}>{currentItem.title}</span>
+      </div>
     </div>
   )
 }
