@@ -166,7 +166,7 @@ const headerCellStyle = {
   height: 48,
   padding: '0 8px',
   textAlign: 'left',
-  border: '1px solid #cccccc',
+  border: 'none',
   color: '#1a1a1a',
   font: '700 14px/20px "Open Sans", sans-serif',
 }
