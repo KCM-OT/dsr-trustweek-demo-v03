@@ -12,6 +12,7 @@ export const WORKFLOWS = [
   {
     id: 'wf-opt-out',
     name: 'Opt-out',
+    accent: '#8ee86d',
     requestType: 'Do Not Sell/Share, Opt-out of marketing',
     systems: ['Marketo'],
     steps: 1,
@@ -20,6 +21,7 @@ export const WORKFLOWS = [
   {
     id: 'wf-access',
     name: 'Access',
+    accent: '#6986e6',
     requestType: 'Access / Know',
     systems: ['Internal warehouse', 'Salesforce', 'Marketo', 'Zendesk'],
     steps: 6,
@@ -28,6 +30,7 @@ export const WORKFLOWS = [
   {
     id: 'wf-deletion',
     name: 'Deletion',
+    accent: '#e4c26b',
     requestType: 'Delete',
     systems: ['Salesforce', 'Marketo', 'Zendesk', 'Internal warehouse', 'Legal'],
     steps: 5,
@@ -36,6 +39,7 @@ export const WORKFLOWS = [
   {
     id: 'wf-correction',
     name: 'Correction',
+    accent: '#c9ea6e',
     requestType: 'Correct',
     systems: ['Salesforce', 'Marketo', 'Zendesk'],
     steps: 4,

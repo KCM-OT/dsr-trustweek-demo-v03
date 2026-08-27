@@ -87,11 +87,23 @@ export function WorkflowsScene() {
                           width: 32,
                           height: 32,
                           flexShrink: 0,
-                          background: '#f4f3f3',
+                          background: `${wf.accent}22`,
+                          border: `1px solid ${wf.accent}66`,
                           borderRadius: 6,
                         }}
                       >
-                        <img src="/figma/chart-diagram.svg" alt="" width="16" height="16" />
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            width: 16,
+                            height: 16,
+                            display: 'block',
+                            backgroundColor: wf.accent,
+                            WebkitMask: 'url("/figma/chart-diagram.svg") center / contain no-repeat',
+                            mask: 'url("/figma/chart-diagram.svg") center / contain no-repeat',
+                          }}
+                        />
+                        <span className="sr-only">{wf.name} workflow icon</span>
                       </span>
                       <div>
                         <div style={{ font: '600 14px/20px "Open Sans", sans-serif', color: 'var(--ot-ink)' }}>{wf.name}</div>
