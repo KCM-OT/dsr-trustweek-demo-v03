@@ -128,7 +128,7 @@ const COLUMNS = [
 
 function Table() {
   return (
-    <div style={{ overflowX: 'auto', padding: '0 24px' }}>
+    <div style={{ overflowX: 'auto', padding: 0 }}>
       <table style={{ width: '100%', minWidth: 860, borderCollapse: 'collapse', tableLayout: 'fixed' }}>
         <colgroup>
           <col style={{ width: '18%' }} />
