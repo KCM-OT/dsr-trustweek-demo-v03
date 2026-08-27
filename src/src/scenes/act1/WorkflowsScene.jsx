@@ -98,12 +98,27 @@ export function WorkflowsScene() {
                             width: 16,
                             height: 16,
                             display: 'block',
+                            flexShrink: 0,
                             backgroundColor: wf.accent,
                             WebkitMask: `url("/figma/${wf.icon}") center / contain no-repeat`,
                             mask: `url("/figma/${wf.icon}") center / contain no-repeat`,
                           }}
                         />
-                        <span className="sr-only">{wf.name} workflow icon</span>
+                        <span
+                          style={{
+                            position: 'absolute',
+                            width: 1,
+                            height: 1,
+                            padding: 0,
+                            margin: -1,
+                            overflow: 'hidden',
+                            clip: 'rect(0, 0, 0, 0)',
+                            whiteSpace: 'nowrap',
+                            border: 0,
+                          }}
+                        >
+                          {wf.name} workflow icon
+                        </span>
                       </span>
                       <div>
                         <div style={{ font: '600 14px/20px "Open Sans", sans-serif', color: 'var(--ot-ink)' }}>{wf.name}</div>
