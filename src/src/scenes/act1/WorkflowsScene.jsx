@@ -99,8 +99,8 @@ export function WorkflowsScene() {
                             height: 16,
                             display: 'block',
                             backgroundColor: wf.accent,
-                            WebkitMask: 'url("/figma/chart-diagram.svg") center / contain no-repeat',
-                            mask: 'url("/figma/chart-diagram.svg") center / contain no-repeat',
+                            WebkitMask: `url("/figma/${wf.icon}") center / contain no-repeat`,
+                            mask: `url("/figma/${wf.icon}") center / contain no-repeat`,
                           }}
                         />
                         <span className="sr-only">{wf.name} workflow icon</span>
