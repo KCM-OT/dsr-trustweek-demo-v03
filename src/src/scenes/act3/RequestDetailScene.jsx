@@ -315,6 +315,17 @@ function SelectedWorkflowCard() {
   )
 }
 
+// Which stage the request is currently on, 0-indexed into marcus.plan —
+// the first item that isn't Done yet (or the last item, once everything
+// is). Shared by the stage chevron (shows the whole workflow's stages)
+// and the steps panel (shows only the subtasks added so far, stage by
+// stage — see WorkflowStepsPanel).
+function currentStageIndex(beat) {
+  const states = marcus.plan.map((item) => itemState(item, beat).status)
+  const i = states.findIndex((s) => s !== 'Done')
+  return i === -1 ? marcus.plan.length - 1 : i
+}
+
 // Stage bar — occupies the same "where is this request in its process"
 // role as the legacy blue chevron stage bar this scene's skeleton is based
 // on, just driven by the matched workflow's steps (marcus.plan) instead of
@@ -323,8 +334,7 @@ function SelectedWorkflowCard() {
 function WorkflowStageChevron({ beat }) {
   const total = marcus.plan.length
   const states = marcus.plan.map((item) => itemState(item, beat).status)
-  let currentIndex = states.findIndex((s) => s !== 'Done')
-  if (currentIndex === -1) currentIndex = total - 1
+  const currentIndex = currentStageIndex(beat)
   const currentItem = marcus.plan[currentIndex]
 
   return (
@@ -389,6 +399,14 @@ function itemState(item, beat) {
 function WorkflowStepsPanel({ beat }) {
   const navigate = useNavigate()
 
+  // Subtasks are tied to the workflow's current stage: only the tasks up
+  // through the stage the request has reached are visible, so at stage 1
+  // just "Verify identity" shows. Fast-forwarding to stage 5 reveals the
+  // stages 2–4 subtasks (Salesforce, Marketo, Zendesk) along with it, as
+  // if they'd been added one by one on the way there.
+  const currentIndex = currentStageIndex(beat)
+  const visiblePlan = marcus.plan.slice(0, currentIndex + 1)
+
   return (
     <div
       style={{
@@ -398,7 +416,7 @@ function WorkflowStepsPanel({ beat }) {
         padding: 'var(--space-2) 0',
       }}
     >
-      {marcus.plan.map((item, i) => {
+      {visiblePlan.map((item, i) => {
         const Icon = PLAN_ICONS[item.system] || DocumentIcon
         const s = itemState(item, beat)
         return (
@@ -411,7 +429,7 @@ function WorkflowStepsPanel({ beat }) {
               alignItems: 'flex-start',
               gap: 'var(--space-3)',
               padding: '14px var(--space-4)',
-              borderBottom: i < marcus.plan.length - 1 ? '1px solid var(--ot-border)' : 'none',
+              borderBottom: i < visiblePlan.length - 1 ? '1px solid var(--ot-border)' : 'none',
             }}
           >
             <span
