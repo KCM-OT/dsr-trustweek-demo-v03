@@ -38,19 +38,20 @@ import { getWorkflowByName } from '../../data/workflows'
 // Act 3's agent collaboration (split screen).
 
 const BEATS = [
-  'Initial state',
+  'Request tab, initial state',
+  'Transition to Workflow tab',
   'Workflow steps appear (staggered)',
   'Fast-forward — items 1–4 done, item 5 flagged for privacy review',
   'Hand off → split screen',
 ]
 
-const HANDOFF_BEAT = 3
+const HANDOFF_BEAT = 4
 // The workflow's steps are pre-determined by the matched workflow itself
 // (data/workflows.js), not "planned" per request — so this scene has no
-// separate reasoning/plan-explanation beat. Fast-forward now lands one
-// beat earlier than before. The scene opens directly on the Workflow tab's
-// initial state (no separate Request-tab beat ahead of it).
-const FAST_FORWARD_BEAT = 2
+// separate reasoning/plan-explanation beat. The scene opens on the Request
+// tab (beat 0), then transitions to the Workflow tab on beat 1, where its
+// steps appear and fast-forward plays out.
+const FAST_FORWARD_BEAT = 3
 
 const PLAN_ICONS = {
   'ID verification': IdBadgeIcon,
@@ -68,7 +69,7 @@ export function RequestDetailScene() {
   const beat = useSceneBeats('request-detail', 'Request detail — Marcus Bell', BEATS, null, () =>
     navigate('/intake', { state: { resume: 'pre-submit' } })
   )
-  const [tab, setTab] = useState('Workflow')
+  const [tab, setTab] = useState('Request')
 
   // Entered with a requested beat (the split screen's back-exit returns
   // here at beat 5, the fast-forward state); number key 3 still lands on 0.
@@ -90,6 +91,8 @@ export function RequestDetailScene() {
   useEffect(() => {
     if (sceneId !== 'request-detail') return
     if (beat === 0) {
+      setTab('Request')
+    } else if (beat === 1) {
       setTab('Workflow')
     } else if (beat === HANDOFF_BEAT) {
       navigate('/requests/4207/subtask')
