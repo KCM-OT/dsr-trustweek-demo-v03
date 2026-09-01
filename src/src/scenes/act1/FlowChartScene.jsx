@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSceneBeats } from '../../cue/CueContext'
 import { AiLoader } from '../../components/AiLoader'
+import { SendIcon } from '../../shell/icons'
 
 // Act 1 capstone — the generated DSAR intake workflow, rebuilt from Figma
 // "workflow for vercel" (DSR-2026, node 187:3734). Geometry, copy, colors
@@ -226,6 +227,22 @@ const CARDS = [
   },
 ]
 
+// Not part of the Figma frame — this card only exists once the agent chat
+// (below) makes the scripted edit, so it has no dots/connector artwork of
+// its own. It stacks directly under "Privacy sign-off: redactions" (same
+// x, lane still 'access') and is joined to it with a plain drawn line
+// rather than exported connector SVG.
+const ESCALATION_CARD = {
+  id: 'access-escalate-legal',
+  lane: 'access',
+  x: 1104,
+  y: 373,
+  bar: '#ba9c54',
+  title: ['Escalate to legal'],
+  sub: ['High-risk flags'],
+  tip: 'Added via chat — high-risk access requests flagged in review are escalated to Legal before delivery.',
+}
+
 // The design's own exported connector artwork — placed at Figma geometry.
 const CONNECTORS = [
   { src: 'connector-step1-and-step2.svg', lane: 'trunk', x: 210.333, y: 475.333, w: 38.334, h: 5.334 },
@@ -312,6 +329,11 @@ export function FlowChartScene() {
   const dragRef = useRef(null)
   const viewportRef = useRef(null)
   const zoom = ZOOM_STEPS[zoomIndex]
+
+  // Scripted chat-driven edit — the agent chat bubble (bottom-right) lets
+  // the presenter ask for a change to the generated chart; the one scripted
+  // request adds the ESCALATION_CARD below the sign-off card.
+  const [escalationAdded, setEscalationAdded] = useState(false)
 
   // The frame is authored at 1950×978 and shown at 70%. On narrower viewports
   // that still overflows, so on mount we drop to the largest step that fits
@@ -522,6 +544,31 @@ export function FlowChartScene() {
               onHover={setHovered}
             />
           ))}
+
+          {escalationAdded && (
+            <>
+              <span
+                className="anim-enter"
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  left: ESCALATION_CARD.x + CARD_W / 2 - 1,
+                  top: 333,
+                  width: 2,
+                  height: ESCALATION_CARD.y - 333,
+                  background: CARD_BORDER,
+                  opacity: laneDimmed(focus, ESCALATION_CARD.lane) ? 0.3 : 1,
+                }}
+              />
+              <FlowCard
+                card={ESCALATION_CARD}
+                dimmed={laneDimmed(focus, ESCALATION_CARD.lane)}
+                active={hovered === ESCALATION_CARD.id}
+                onHover={setHovered}
+                className="anim-enter"
+              />
+            </>
+          )}
         </div>
 
         {hoveredCard && (
@@ -537,6 +584,8 @@ export function FlowChartScene() {
           onZoomIn={() => setZoomIndex((i) => Math.min(ZOOM_STEPS.length - 1, i + 1))}
           onTogglePan={() => setPanTool((v) => !v)}
         />
+
+        <AgentChatWidget escalationAdded={escalationAdded} onEscalate={() => setEscalationAdded(true)} />
       </div>
     </div>
   )
@@ -565,7 +614,7 @@ function PageHeader() {
   )
 }
 
-function FlowCard({ card, dimmed, active, onHover }) {
+function FlowCard({ card, dimmed, active, onHover, className }) {
   const titleLines = card.title
   const subLines = card.sub || []
   const totalLines = titleLines.length + subLines.length
@@ -573,6 +622,7 @@ function FlowCard({ card, dimmed, active, onHover }) {
 
   return (
     <div
+      className={className}
       onMouseEnter={() => onHover(card.id)}
       onMouseLeave={() => onHover(null)}
       onFocus={() => onHover(card.id)}
@@ -730,6 +780,291 @@ function NavigationTools({ zoom, panTool, canZoomOut, canZoomIn, onZoomOut, onZo
       >
         <img src="/figma/hand-pan-function.svg" alt="" width="13" height="14" draggable="false" />
       </button>
+    </div>
+  )
+}
+
+// Suggested edit surfaced as a one-click chip — the scripted request this
+// prototype supports. Clicking it or typing free text both run the same
+// canned exchange, so the demo can't dead-end on unexpected phrasing.
+const SUGGESTED_PROMPT = 'Escalate flagged high-risk access requests to Legal'
+
+// Floating agent chat — lets the presenter "edit" the generated chart from
+// chat, mirroring the setup conversation's agent-message styling (Figma
+// "chat-elements", node 492:15408; --ot-agent-* tokens) rather than
+// reusing the Figma-frame chrome above. Scripted for the demo: any message
+// sent before the escalation exists triggers the one canned edit; anything
+// sent after gets a "already here" reply instead of adding a duplicate.
+function AgentChatWidget({ escalationAdded, onEscalate }) {
+  const [open, setOpen] = useState(false)
+  const [messages, setMessages] = useState([])
+  const [input, setInput] = useState('')
+  const [thinking, setThinking] = useState(false)
+  const listRef = useRef(null)
+
+  useEffect(() => {
+    const el = listRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [messages, thinking, open])
+
+  function send(text) {
+    const value = text.trim()
+    if (!value || thinking) return
+    setMessages((m) => [...m, { from: 'user', text: value }])
+    setInput('')
+    setThinking(true)
+    setTimeout(() => {
+      setThinking(false)
+      if (escalationAdded) {
+        setMessages((m) => [
+          ...m,
+          { from: 'agent', text: 'That escalation step is already in this workflow — look for "Escalate to legal" under the privacy sign-off card.' },
+        ])
+      } else {
+        onEscalate()
+        setMessages((m) => [
+          ...m,
+          { from: 'agent', text: 'Done — I added an "Escalate to legal" step after the privacy sign-off, for high-risk access requests flagged in review.' },
+        ])
+      }
+    }, 1100)
+  }
+
+  function stop(e) {
+    e.stopPropagation()
+  }
+
+  return (
+    <div onMouseDown={stop} onClick={stop} style={{ position: 'absolute', right: 24, bottom: 24, zIndex: 25 }}>
+      {open && (
+        <div
+          role="dialog"
+          aria-label="Ask the agent to update this workflow"
+          style={{
+            position: 'absolute',
+            right: 0,
+            bottom: 64,
+            width: 340,
+            maxHeight: 460,
+            display: 'flex',
+            flexDirection: 'column',
+            background: 'var(--ot-surface)',
+            border: '1px solid var(--ot-border)',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-overlay)',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 16px',
+              borderBottom: '1px solid var(--ot-border)',
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--fs-section)', color: 'var(--ot-ink)' }}>
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 28,
+                  height: 28,
+                  flexShrink: 0,
+                  borderRadius: '50%',
+                  background: 'var(--ot-agent-avatar-bg)',
+                }}
+              >
+                <img src="/figma/ai-indicator.svg" alt="" width={16} height={16} aria-hidden="true" />
+              </span>
+              Ask the agent
+            </span>
+            <button
+              type="button"
+              aria-label="Close chat"
+              onClick={() => setOpen(false)}
+              style={{ border: 'none', background: 'transparent', color: 'var(--ot-ink-3)', cursor: 'pointer', font: '400 20px/1 "Open Sans", sans-serif' }}
+            >
+              &times;
+            </button>
+          </div>
+
+          <div ref={listRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px' }}>
+            <ChatAgentMessage>
+              Ask me to update this workflow — try the suggestion below, or type your own request.
+            </ChatAgentMessage>
+
+            {messages.map((msg, i) =>
+              msg.from === 'user' ? (
+                <ChatUserMessage key={i}>{msg.text}</ChatUserMessage>
+              ) : (
+                <ChatAgentMessage key={i}>{msg.text}</ChatAgentMessage>
+              )
+            )}
+
+            {thinking && <ChatAgentMessage typing />}
+
+            {messages.length === 0 && !thinking && (
+              <button
+                type="button"
+                onClick={() => send(SUGGESTED_PROMPT)}
+                className="anim-enter"
+                style={{
+                  display: 'block',
+                  width: 'calc(100% - 37px)',
+                  textAlign: 'left',
+                  padding: '10px 14px',
+                  margin: '0 0 0 37px',
+                  background: 'var(--ot-agent-tint)',
+                  border: '1px solid var(--ot-agent)',
+                  borderRadius: 'var(--radius-control)',
+                  color: 'var(--ot-agent)',
+                  font: '600 13px/1.4 "Open Sans", sans-serif',
+                  cursor: 'pointer',
+                }}
+              >
+                {'"'}{SUGGESTED_PROMPT}{'"'}
+              </button>
+            )}
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              send(input)
+            }}
+            style={{ flexShrink: 0, display: 'flex', gap: 8, padding: 12, borderTop: '1px solid var(--ot-border)' }}
+          >
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask for a change…"
+              aria-label="Message the agent"
+              style={{
+                flex: 1,
+                minWidth: 0,
+                padding: '9px 12px',
+                background: 'var(--ot-bg)',
+                border: '1px solid var(--ot-border)',
+                borderRadius: 'var(--radius-control)',
+                color: 'var(--ot-ink)',
+                font: '400 13.5px/1.4 "Open Sans", sans-serif',
+              }}
+            />
+            <button
+              type="submit"
+              aria-label="Send"
+              disabled={!input.trim() || thinking}
+              style={{
+                display: 'grid',
+                placeItems: 'center',
+                width: 36,
+                height: 36,
+                flexShrink: 0,
+                border: 'none',
+                borderRadius: 'var(--radius-control)',
+                background: 'var(--ot-agent)',
+                color: '#fff',
+                opacity: !input.trim() || thinking ? 0.5 : 1,
+                cursor: !input.trim() || thinking ? 'default' : 'pointer',
+              }}
+            >
+              <SendIcon width={16} height={16} />
+            </button>
+          </form>
+        </div>
+      )}
+
+      <button
+        type="button"
+        aria-label={open ? 'Close agent chat' : 'Ask the agent to update this workflow'}
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          display: 'grid',
+          placeItems: 'center',
+          width: 52,
+          height: 52,
+          border: 'none',
+          borderRadius: '50%',
+          background: 'var(--ot-agent)',
+          boxShadow: 'var(--shadow-overlay)',
+          cursor: 'pointer',
+        }}
+      >
+        {open ? (
+          <span style={{ color: '#fff', font: '400 22px/1 "Open Sans", sans-serif' }}>&times;</span>
+        ) : (
+          <img src="/figma/ai-indicator.svg" alt="" width={24} height={24} aria-hidden="true" />
+        )}
+      </button>
+    </div>
+  )
+}
+
+// Agent bubble — same shell as the setup conversation's AgentMessage
+// (Figma "chat-elements", node 492:15408), reproduced locally since this
+// scene's chat is its own scoped widget rather than a beat-driven transcript.
+function ChatAgentMessage({ children, typing }) {
+  return (
+    <div className="anim-enter" style={{ display: 'flex', alignItems: 'flex-end', gap: 8, margin: '0 0 12px' }}>
+      <span
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 29,
+          height: 29,
+          flexShrink: 0,
+          borderRadius: '50%',
+          background: 'var(--ot-agent-avatar-bg)',
+        }}
+      >
+        <img src="/figma/ai-indicator.svg" alt="" width={16} height={16} aria-hidden="true" />
+      </span>
+      <div
+        style={{
+          background: 'var(--ot-agent-bubble-bg)',
+          border: '1px solid var(--ot-agent-bubble-border)',
+          borderRadius: '10px 10px 10px 0',
+          padding: typing ? '11px 16px' : '12px 16px',
+          maxWidth: 240,
+        }}
+      >
+        {typing ? (
+          <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+            <span className="typing-dot" />
+            <span className="typing-dot" />
+            <span className="typing-dot" />
+          </span>
+        ) : (
+          <p style={{ font: '400 13.5px/1.5 "Open Sans", sans-serif', color: 'var(--ot-ink)', margin: 0 }}>{children}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// User reply: right-aligned, plain surface — mirrors AdminMessage.
+function ChatUserMessage({ children }) {
+  return (
+    <div className="anim-enter" style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 12px' }}>
+      <div
+        style={{
+          background: 'var(--ot-bg)',
+          border: '1px solid var(--ot-border)',
+          borderRadius: 'var(--radius-card)',
+          padding: '8px 14px',
+          font: '400 13.5px/1.5 "Open Sans", sans-serif',
+          color: 'var(--ot-ink)',
+          maxWidth: 240,
+        }}
+      >
+        {children}
+      </div>
     </div>
   )
 }
