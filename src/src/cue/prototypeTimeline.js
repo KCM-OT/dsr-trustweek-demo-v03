@@ -41,8 +41,7 @@ const JOURNEY_SCENES = [
     tone: 'platform',
     beats: [
       'Request tab, initial state',
-      'Transition to Workflow tab',
-      'Workflow steps appear',
+      'Transition to Workflow tab (steps appear)',
       'Items 1–4 complete',
       'Handoff to split screen',
     ],

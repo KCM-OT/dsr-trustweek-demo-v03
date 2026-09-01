@@ -39,19 +39,18 @@ import { getWorkflowByName } from '../../data/workflows'
 
 const BEATS = [
   'Request tab, initial state',
-  'Transition to Workflow tab',
-  'Workflow steps appear (staggered)',
+  'Transition to Workflow tab (steps appear)',
   'Fast-forward — items 1–4 done, item 5 flagged for privacy review',
   'Hand off → split screen',
 ]
 
-const HANDOFF_BEAT = 4
+const HANDOFF_BEAT = 3
 // The workflow's steps are pre-determined by the matched workflow itself
 // (data/workflows.js), not "planned" per request — so this scene has no
 // separate reasoning/plan-explanation beat. The scene opens on the Request
-// tab (beat 0), then transitions to the Workflow tab on beat 1, where its
-// steps appear and fast-forward plays out.
-const FAST_FORWARD_BEAT = 3
+// tab (beat 0), then transitions to the Workflow tab on beat 1 — its steps
+// appear as part of that same transition — and fast-forward plays out.
+const FAST_FORWARD_BEAT = 2
 
 const PLAN_ICONS = {
   'ID verification': IdBadgeIcon,
