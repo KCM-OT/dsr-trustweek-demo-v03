@@ -30,7 +30,7 @@ const cellStyle = {
   verticalAlign: 'top',
 }
 
-const COLUMNS = ['Workflow', 'Request type', 'Systems', 'Steps', 'Status']
+const COLUMNS = ['Workflow', 'Request type', 'Subtasks', 'Steps', 'Status']
 
 export function WorkflowsScene() {
   const navigate = useNavigate()
@@ -127,7 +127,15 @@ export function WorkflowsScene() {
                     </div>
                   </td>
                   <td style={cellStyle}>{wf.requestType}</td>
-                  <td style={cellStyle}>{wf.systems.join(', ')}</td>
+                  <td style={cellStyle}>
+                    <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {wf.subtasks.map((task) => (
+                        <li key={task} style={{ font: '400 13px/18px "Open Sans", sans-serif', color: 'var(--ot-ink-2)' }}>
+                          {task}
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
                   <td style={cellStyle}>{wf.steps}</td>
                   <td style={cellStyle}>
                     <StatusPill status="Ready for review" />
