@@ -38,19 +38,19 @@ import { getWorkflowByName } from '../../data/workflows'
 // Act 3's agent collaboration (split screen).
 
 const BEATS = [
-  'Request detail, initial state',
   'Initial state',
   'Workflow steps appear (staggered)',
   'Fast-forward — items 1–4 done, item 5 flagged for privacy review',
   'Hand off → split screen',
 ]
 
-const HANDOFF_BEAT = 4
+const HANDOFF_BEAT = 3
 // The workflow's steps are pre-determined by the matched workflow itself
 // (data/workflows.js), not "planned" per request — so this scene has no
 // separate reasoning/plan-explanation beat. Fast-forward now lands one
-// beat earlier than before.
-const FAST_FORWARD_BEAT = 3
+// beat earlier than before. The scene opens directly on the Workflow tab's
+// initial state (no separate Request-tab beat ahead of it).
+const FAST_FORWARD_BEAT = 2
 
 const PLAN_ICONS = {
   'ID verification': IdBadgeIcon,
@@ -81,8 +81,6 @@ export function RequestDetailScene() {
 
   useEffect(() => {
     if (beat === 0) {
-      setTab('Request')
-    } else if (beat === 1) {
       setTab('Workflow')
     } else if (beat === HANDOFF_BEAT) {
       navigate('/requests/4207/subtask')
@@ -252,13 +250,9 @@ function Tabs({ tab, onSelect }) {
 function WorkflowTab({ beat }) {
   return (
     <div style={{ maxWidth: 640 }}>
-      {beat >= 1 && (
-        <>
-          <SelectedWorkflowCard />
-          <WorkflowStageChevron beat={beat} />
-          <WorkflowStepsPanel beat={beat} />
-        </>
-      )}
+      <SelectedWorkflowCard />
+      <WorkflowStageChevron beat={beat} />
+      <WorkflowStepsPanel beat={beat} />
     </div>
   )
 }

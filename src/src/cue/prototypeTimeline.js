@@ -40,7 +40,6 @@ const JOURNEY_SCENES = [
     sceneLabel: 'Request detail',
     tone: 'platform',
     beats: [
-      'Request detail, initial state',
       'Initial state',
       'Workflow steps appear',
       'Items 1–4 complete',
