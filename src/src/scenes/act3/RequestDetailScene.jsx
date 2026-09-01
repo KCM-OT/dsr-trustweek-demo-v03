@@ -73,19 +73,28 @@ export function RequestDetailScene() {
   // Entered with a requested beat (the split screen's back-exit returns
   // here at beat 5, the fast-forward state); number key 3 still lands on 0.
   const location = useLocation()
-  const { jumpToBeat } = useCue()
+  const { sceneId, jumpToBeat } = useCue()
   useEffect(() => {
     if (typeof location.state?.beat === 'number') jumpToBeat(location.state.beat)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Guarded on sceneId, not just beat: on the mount render right after a
+  // cross-scene navigation (e.g. from intake's Confirm → here), `beat`
+  // still holds the PREVIOUS scene's leftover beatIndex from shared cue
+  // context for one render, before useSceneBeats' registration effect
+  // corrects it — so if that leftover value happens to equal HANDOFF_BEAT,
+  // this would fire the handoff navigate before this scene ever renders.
+  // sceneId is stale on that exact same render too, so checking it here
+  // skips the bad pass and only acts once context truly reflects this scene.
   useEffect(() => {
+    if (sceneId !== 'request-detail') return
     if (beat === 0) {
       setTab('Workflow')
     } else if (beat === HANDOFF_BEAT) {
       navigate('/requests/4207/subtask')
     }
-  }, [beat, navigate])
+  }, [beat, sceneId, navigate])
 
   return (
     <div>
