@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { attention } from '../../data/fixtures'
 import { AgentMark } from '../../components/AgentMark'
 
@@ -9,8 +9,13 @@ import { AgentMark } from '../../components/AgentMark'
 // call onResolve so the dashboard's "Awaiting human" stat ticks down —
 // "one live system, not separate screens." Copy verbatim from fixtures
 // §attention / 03_demo_script.md, aside from the added duplicate item.
+//
+// autoCompareId/autoCompareTrigger are set by DashboardScene's cue-driven
+// beat 2 — when autoCompareTrigger increments, the card whose id matches
+// autoCompareId opens its "Compare requests" modal automatically, the same
+// way the card's own button does.
 
-export function NeedsAttention({ onResolve }) {
+export function NeedsAttention({ onResolve, autoCompareId, autoCompareTrigger }) {
   return (
     <section id="needs-attention" style={{ marginTop: 'var(--space-8)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--space-4)' }}>
@@ -21,20 +26,34 @@ export function NeedsAttention({ onResolve }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--space-4)', alignItems: 'start' }}>
         {attention.map((item) => (
-          <AttentionCard key={item.id} item={item} onResolve={onResolve} />
+          <AttentionCard
+            key={item.id}
+            item={item}
+            onResolve={onResolve}
+            autoCompareTrigger={item.id === autoCompareId ? autoCompareTrigger : 0}
+          />
         ))}
       </div>
     </section>
   )
 }
 
-function AttentionCard({ item, onResolve }) {
+function AttentionCard({ item, onResolve, autoCompareTrigger }) {
   // 'open' → (identity match) 'reviewing' → 'resolved'; non-scripted items
   // stay 'open' (their action buttons are inert) EXCEPT kind:'duplicate',
   // which has its own live path: 'open' → 'comparing' (modal) → 'resolved',
   // with the resolve note depending on which modal action was chosen.
   const [phase, setPhase] = useState('open')
   const [resolveNote, setResolveNote] = useState(item.resolveNote)
+
+  // Cue-driven auto-open — skips 0 so mount doesn't fire this before the
+  // cue deck ever asks for it (same guard pattern as the flow chart's
+  // agent-chat auto-ask trigger).
+  useEffect(() => {
+    if (!autoCompareTrigger) return
+    setPhase('comparing')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCompareTrigger])
 
   function resolve(note) {
     if (note) setResolveNote(note)

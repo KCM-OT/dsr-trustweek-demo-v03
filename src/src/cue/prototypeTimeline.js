@@ -93,7 +93,7 @@ const JOURNEY_SCENES = [
     act: 'Act 4',
     sceneLabel: 'Program dashboard',
     tone: 'dashboard',
-    beats: ['Dashboard overview', 'Needs your attention'],
+    beats: ['Dashboard overview', 'Needs your attention', 'Compare duplicate request'],
   },
   { sceneId: 'blank', route: '/blank', act: 'Holding', sceneLabel: 'Holding screen', tone: 'meridian', beats: ['Holding'] },
 ]
