@@ -98,6 +98,7 @@ const JOURNEY_SCENES = [
       'Needs your attention',
       'Compare duplicate request',
       'Reject duplicate → learn prompt',
+      'Confirm learn and auto-reject',
     ],
   },
   { sceneId: 'blank', route: '/blank', act: 'Holding', sceneLabel: 'Holding screen', tone: 'meridian', beats: ['Holding'] },

@@ -16,9 +16,20 @@ import { AgentMark } from '../../components/AgentMark'
 // way the card's own button does. autoRejectId/autoRejectTrigger are set by
 // beat 3 — when autoRejectTrigger increments, the matching card (which must
 // already be in 'comparing', from beat 2) clicks "Reject duplicate" for the
-// presenter, surfacing the learn-from-this-decision prompt.
+// presenter, surfacing the learn-from-this-decision prompt. autoLearnId/
+// autoLearnTrigger are set by beat 4 — when autoLearnTrigger increments,
+// the matching card (which must already be in 'confirmLearn', from beat 3)
+// clicks "Yes, learn and auto-reject" for the presenter, resolving the card.
 
-export function NeedsAttention({ onResolve, autoCompareId, autoCompareTrigger, autoRejectId, autoRejectTrigger }) {
+export function NeedsAttention({
+  onResolve,
+  autoCompareId,
+  autoCompareTrigger,
+  autoRejectId,
+  autoRejectTrigger,
+  autoLearnId,
+  autoLearnTrigger,
+}) {
   return (
     <section id="needs-attention" style={{ marginTop: 'var(--space-8)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--space-4)' }}>
@@ -35,6 +46,7 @@ export function NeedsAttention({ onResolve, autoCompareId, autoCompareTrigger, a
             onResolve={onResolve}
             autoCompareTrigger={item.id === autoCompareId ? autoCompareTrigger : 0}
             autoRejectTrigger={item.id === autoRejectId ? autoRejectTrigger : 0}
+            autoLearnTrigger={item.id === autoLearnId ? autoLearnTrigger : 0}
           />
         ))}
       </div>
@@ -42,7 +54,7 @@ export function NeedsAttention({ onResolve, autoCompareId, autoCompareTrigger, a
   )
 }
 
-function AttentionCard({ item, onResolve, autoCompareTrigger, autoRejectTrigger }) {
+function AttentionCard({ item, onResolve, autoCompareTrigger, autoRejectTrigger, autoLearnTrigger }) {
   // 'open' → (identity match) 'reviewing' → 'resolved'; non-scripted items
   // stay 'open' (their action buttons are inert) EXCEPT kind:'duplicate',
   // which has its own live path: 'open' → 'comparing' (modal) →
@@ -69,6 +81,15 @@ function AttentionCard({ item, onResolve, autoCompareTrigger, autoRejectTrigger 
     setPhase('confirmLearn')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRejectTrigger])
+
+  // Cue-driven auto-confirm — fires the same transition the learn prompt's
+  // own "Yes, learn and auto-reject" button does, resolving the card with
+  // the learn-aware note.
+  useEffect(() => {
+    if (!autoLearnTrigger) return
+    resolve(item.rejectLearnNote || item.rejectNote)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoLearnTrigger])
 
   function resolve(note) {
     if (note) setResolveNote(note)
