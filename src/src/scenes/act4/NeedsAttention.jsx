@@ -3,11 +3,12 @@ import { attention } from '../../data/fixtures'
 import { AgentMark } from '../../components/AgentMark'
 
 // Needs-attention list (build spec §4.2) — agent-raised items, visually
-// distinct from the queue (cards, not table rows; each ✦-authored). All 8
-// fixture items render; the two scripted (identity-match compare→approve,
-// and escalate) resolve live and call onResolve so the dashboard's
-// "Awaiting human" stat ticks down — "one live system, not separate
-// screens." Copy verbatim from fixtures §attention / 03_demo_script.md.
+// distinct from the queue (cards, not table rows; each ✦-authored). All 9
+// fixture items render (including a duplicate-request flag, id 9); the two
+// scripted (identity-match compare→approve, and escalate) resolve live and
+// call onResolve so the dashboard's "Awaiting human" stat ticks down —
+// "one live system, not separate screens." Copy verbatim from fixtures
+// §attention / 03_demo_script.md, aside from the added duplicate item.
 
 export function NeedsAttention({ onResolve }) {
   return (
@@ -110,7 +111,7 @@ function AttentionCard({ item, onResolve }) {
 // fixtures tag every item severity:"warn").
 function DeadlineChip({ kind }) {
   const urgent = kind === 'stalled'
-  const label = urgent ? 'Deadline risk' : 'Needs review'
+  const label = urgent ? 'Deadline risk' : kind === 'duplicate' ? 'Possible duplicate' : 'Needs review'
   return (
     <span
       style={{

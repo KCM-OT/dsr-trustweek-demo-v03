@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSceneBeats } from '../../cue/CueContext'
+import { useCue, useSceneBeats } from '../../cue/CueContext'
 import { AgentMark } from '../../components/AgentMark'
 import { QueueTable } from '../../shell/QueueTable'
 import { PageHeader, PageBody, PageAction } from '../../shell/PageHeader'
@@ -22,11 +22,14 @@ import { REPORT_PAGES } from '../ReportScene'
 // segmented control recomputes every value from fixtures §history; four stat
 // blocks; one trend chart; a compact distribution row; and the deliberately
 // subordinated request queue (~35% viewport). Below it, the needs-attention
-// list (§4.2). This is a [CLICK] surface — no cues (rehearsal card: Act 4 =
-// 0 cues + 4 clicks) — so it registers a single beat with the engine and
-// number key 4 lands here in its initial state.
+// list (§4.2). This is mostly a [CLICK] surface (rehearsal card: Act 4 =
+// 0 cues + 4 clicks), but it registers a second, cue-driven beat that
+// scrolls down to reveal the needs-attention section — the same scroll the
+// AI-summary banner's "View needs-attention" link and the "Awaiting human"
+// stat block already trigger on click, just fired for the presenter on
+// advance instead of a manual click. Number key 4 still lands on beat 0.
 
-const BEATS = ['Dashboard overview']
+const BEATS = ['Dashboard overview', 'Needs your attention']
 
 export function DashboardScene() {
   const navigate = useNavigate()
@@ -34,9 +37,17 @@ export function DashboardScene() {
   // page (the state that handed off here), mirroring every other scene
   // hand-off — without it the report→dashboard advance was the one
   // irreversible press in the walk. Key 4 remains the hard reset.
-  useSceneBeats('dashboard', 'Program dashboard', BEATS, null, () =>
+  const beat = useSceneBeats('dashboard', 'Program dashboard', BEATS, null, () =>
     navigate('/report', { state: { beat: REPORT_PAGES.length - 1 } })
   )
+  const { sceneId } = useCue()
+
+  useEffect(() => {
+    if (sceneId !== 'dashboard') return
+    if (beat === 1) {
+      document.getElementById('needs-attention')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [beat, sceneId])
 
   const [timeframe, setTimeframe] = useState(DEFAULT_TIMEFRAME)
   // Resolving a needs-attention card ticks the live "Awaiting human" stat

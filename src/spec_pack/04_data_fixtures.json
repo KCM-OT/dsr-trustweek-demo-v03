@@ -622,6 +622,15 @@
    "title": "Opt-out signal conflict",
    "body": "Requester opted out via form but their browser sends a Global Privacy Control opt-in for analytics. I honored the stricter signal (opt-out) — flagging for awareness.",
    "action": "Dismiss"
+  },
+  {
+   "id": 9,
+   "kind": "duplicate",
+   "severity": "warn",
+   "request": "AR-4230",
+   "title": "Possible duplicate request",
+   "body": "This access request matches AR-4188 — same requester, submitted 12 days ago and already fulfilled. Confirm before I start a new extract.",
+   "action": "Compare requests"
   }
  ],
  "queue": [
