@@ -571,12 +571,12 @@
   },
   {
    "id": 3,
-   "kind": "identityMatch",
+   "kind": "duplicate",
    "severity": "warn",
-   "request": "AR-4215",
-   "title": "Verification document unreadable",
-   "body": "The uploaded ID photo is too low-resolution to verify. I've asked the requester for a new one — flagging in case no reply by Jul 14.",
-   "action": "View request"
+   "request": "DR-4215",
+   "title": "Possible duplicate request",
+   "body": "Name and email on this deletion request match DR-4179, also a data deletion request submitted 4 days ago. Confirm these are the same person before I process both.",
+   "action": "Compare requests"
   },
   {
    "id": 4,
