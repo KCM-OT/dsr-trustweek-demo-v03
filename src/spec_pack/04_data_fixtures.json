@@ -576,7 +576,29 @@
    "request": "DR-4215",
    "title": "Possible duplicate request",
    "body": "Name and email on this deletion request match DR-4179, also a data deletion request submitted 4 days ago. Confirm these are the same person before I process both.",
-   "action": "Compare requests"
+   "action": "Compare requests",
+   "rejectNote": "Rejected as duplicate · DR-4215 closed, referencing DR-4179.",
+   "keepNote": "Duplicate flag cleared · Both requests will be processed independently.",
+   "duplicate": {
+    "type": "Data deletion",
+    "matchOn": ["name", "email", "type"],
+    "a": {
+     "request": "DR-4215",
+     "name": "Priya Anand",
+     "email": "priya.anand@outerbound.io",
+     "type": "Data deletion",
+     "submitted": "2026-07-18",
+     "status": "Open"
+    },
+    "b": {
+     "request": "DR-4179",
+     "name": "Priya Anand",
+     "email": "priya.anand@outerbound.io",
+     "type": "Data deletion",
+     "submitted": "2026-07-14",
+     "status": "In progress"
+    }
+   }
   },
   {
    "id": 4,
@@ -630,7 +652,29 @@
    "request": "AR-4230",
    "title": "Possible duplicate request",
    "body": "This access request matches AR-4188 — same requester, submitted 12 days ago and already fulfilled. Confirm before I start a new extract.",
-   "action": "Compare requests"
+   "action": "Compare requests",
+   "rejectNote": "Rejected as duplicate · AR-4230 closed, referencing AR-4188.",
+   "keepNote": "Duplicate flag cleared · AR-4230 will proceed as a new extract.",
+   "duplicate": {
+    "type": "Access request",
+    "matchOn": ["name", "email", "type"],
+    "a": {
+     "request": "AR-4230",
+     "name": "Marcus Webb",
+     "email": "marcus.webb@lumen-retail.com",
+     "type": "Access request",
+     "submitted": "2026-07-19",
+     "status": "Open"
+    },
+    "b": {
+     "request": "AR-4188",
+     "name": "Marcus Webb",
+     "email": "marcus.webb@lumen-retail.com",
+     "type": "Access request",
+     "submitted": "2026-07-07",
+     "status": "Fulfilled"
+    }
+   }
   }
  ],
  "queue": [

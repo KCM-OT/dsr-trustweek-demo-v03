@@ -30,10 +30,14 @@ export function NeedsAttention({ onResolve }) {
 
 function AttentionCard({ item, onResolve }) {
   // 'open' → (identity match) 'reviewing' → 'resolved'; non-scripted items
-  // stay 'open' (their action buttons are inert — only two are scripted).
+  // stay 'open' (their action buttons are inert) EXCEPT kind:'duplicate',
+  // which has its own live path: 'open' → 'comparing' (modal) → 'resolved',
+  // with the resolve note depending on which modal action was chosen.
   const [phase, setPhase] = useState('open')
+  const [resolveNote, setResolveNote] = useState(item.resolveNote)
 
-  function resolve() {
+  function resolve(note) {
+    if (note) setResolveNote(note)
     setPhase('resolved')
     onResolve(item.id)
   }
@@ -86,21 +90,122 @@ function AttentionCard({ item, onResolve }) {
 
       <div style={{ marginTop: 'var(--space-3)' }}>
         {resolved ? (
-          <ResolveNote note={item.resolveNote} />
+          <ResolveNote note={resolveNote} />
         ) : phase === 'reviewing' ? (
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <PrimaryAction label="Approve match" onClick={resolve} />
+            <PrimaryAction label="Approve match" onClick={() => resolve()} />
             <QuietAction label="Not a match" />
           </div>
         ) : item.scripted ? (
           <PrimaryAction
             label={item.action}
-            onClick={item.compare ? () => setPhase('reviewing') : resolve}
+            onClick={item.compare ? () => setPhase('reviewing') : () => resolve()}
           />
+        ) : item.kind === 'duplicate' && item.duplicate ? (
+          <PrimaryAction label={item.action} onClick={() => setPhase('comparing')} />
         ) : (
           // Non-scripted item — action present for authenticity, inert on stage.
           <QuietAction label={item.action} />
         )}
+      </div>
+
+      {/* duplicate-request comparison (live path, not tied to the rehearsed
+          identity-match/escalate script) — modal, so it reads as a real
+          decision point rather than another inline card. */}
+      {phase === 'comparing' && item.duplicate && (
+        <DuplicateModal
+          request={item.request}
+          duplicate={item.duplicate}
+          onClose={() => setPhase('open')}
+          onReject={() => resolve(item.rejectNote)}
+          onKeep={() => resolve(item.keepNote)}
+        />
+      )}
+    </div>
+  )
+}
+
+// Duplicate-request comparison modal — side-by-side fields for both
+// requests with matching fields (name/email/type) highlighted the same
+// way CompareCard highlights the identity-match spot-check, plus the two
+// outcomes a reviewer actually has: close this one as the duplicate, or
+// clear the flag and let both proceed independently.
+function DuplicateModal({ request, duplicate, onClose, onReject, onKeep }) {
+  const matchOn = new Set(duplicate.matchOn)
+  const ROWS = [
+    { key: 'request', label: 'Request' },
+    { key: 'name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'type', label: 'Request type' },
+    { key: 'submitted', label: 'Submitted' },
+    { key: 'status', label: 'Status' },
+  ]
+
+  return (
+    <div
+      role="presentation"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(20, 24, 29, 0.45)',
+        display: 'grid',
+        placeItems: 'center',
+        zIndex: 40,
+        padding: 'var(--space-4)',
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Compare duplicate requests for ${request}`}
+        onClick={(e) => e.stopPropagation()}
+        className="anim-enter"
+        style={{
+          width: 560,
+          maxWidth: '100%',
+          background: 'var(--ot-surface)',
+          border: '1px solid var(--ot-border)',
+          borderRadius: 'var(--radius-card)',
+          boxShadow: 'var(--shadow-overlay)',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--ot-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <AgentMark size={13} />
+            <span style={{ font: '600 15px "Open Sans", sans-serif', color: 'var(--ot-ink)' }}>Possible duplicate request</span>
+          </div>
+          <p style={{ font: 'var(--fs-meta)', color: 'var(--ot-ink-2)', marginTop: 4 }}>
+            {duplicate.a.request} matches {duplicate.b.request} on name, email, and request type.
+          </p>
+        </div>
+
+        <div style={{ padding: 'var(--space-4)' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '104px 1fr 1fr',
+              border: '1px solid var(--ot-border)',
+              borderRadius: 'var(--radius-control)',
+              overflow: 'hidden',
+              wordBreak: 'break-word',
+            }}
+          >
+            <Cell head />
+            <Cell head>{duplicate.a.request}</Cell>
+            <Cell head>{duplicate.b.request}</Cell>
+            {ROWS.filter((r) => r.key !== 'request').map((r) => {
+              const match = matchOn.has(r.key)
+              return <FieldRow key={r.key} label={r.label} a={duplicate.a[r.key]} b={duplicate.b[r.key]} match={match} />
+            })}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 'var(--space-2)', padding: 'var(--space-4)', borderTop: '1px solid var(--ot-border)' }}>
+          <DangerAction label="Reject duplicate" onClick={onReject} />
+          <QuietAction label="Remove duplicate flag" onClick={onKeep} />
+        </div>
       </div>
     </div>
   )
@@ -235,15 +340,35 @@ function PrimaryAction({ label, onClick }) {
   )
 }
 
-function QuietAction({ label }) {
+function QuietAction({ label, onClick }) {
   return (
     <button
+      onClick={onClick}
       style={{
         padding: '7px 14px',
         borderRadius: 'var(--radius-control)',
         border: '1px solid var(--ot-border)',
         background: 'var(--ot-surface)',
         color: 'var(--ot-ink-2)',
+        font: '600 13px "Open Sans", sans-serif',
+        cursor: 'pointer',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+function DangerAction({ label, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '7px 14px',
+        borderRadius: 'var(--radius-control)',
+        border: '1px solid var(--ot-danger)',
+        background: 'var(--ot-danger-tint)',
+        color: 'var(--ot-danger)',
         font: '600 13px "Open Sans", sans-serif',
         cursor: 'pointer',
       }}
