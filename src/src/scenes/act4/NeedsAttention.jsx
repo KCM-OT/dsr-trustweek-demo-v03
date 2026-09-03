@@ -13,9 +13,12 @@ import { AgentMark } from '../../components/AgentMark'
 // autoCompareId/autoCompareTrigger are set by DashboardScene's cue-driven
 // beat 2 — when autoCompareTrigger increments, the card whose id matches
 // autoCompareId opens its "Compare requests" modal automatically, the same
-// way the card's own button does.
+// way the card's own button does. autoRejectId/autoRejectTrigger are set by
+// beat 3 — when autoRejectTrigger increments, the matching card (which must
+// already be in 'comparing', from beat 2) clicks "Reject duplicate" for the
+// presenter, surfacing the learn-from-this-decision prompt.
 
-export function NeedsAttention({ onResolve, autoCompareId, autoCompareTrigger }) {
+export function NeedsAttention({ onResolve, autoCompareId, autoCompareTrigger, autoRejectId, autoRejectTrigger }) {
   return (
     <section id="needs-attention" style={{ marginTop: 'var(--space-8)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--space-4)' }}>
@@ -31,6 +34,7 @@ export function NeedsAttention({ onResolve, autoCompareId, autoCompareTrigger })
             item={item}
             onResolve={onResolve}
             autoCompareTrigger={item.id === autoCompareId ? autoCompareTrigger : 0}
+            autoRejectTrigger={item.id === autoRejectId ? autoRejectTrigger : 0}
           />
         ))}
       </div>
@@ -38,11 +42,13 @@ export function NeedsAttention({ onResolve, autoCompareId, autoCompareTrigger })
   )
 }
 
-function AttentionCard({ item, onResolve, autoCompareTrigger }) {
+function AttentionCard({ item, onResolve, autoCompareTrigger, autoRejectTrigger }) {
   // 'open' → (identity match) 'reviewing' → 'resolved'; non-scripted items
   // stay 'open' (their action buttons are inert) EXCEPT kind:'duplicate',
-  // which has its own live path: 'open' → 'comparing' (modal) → 'resolved',
-  // with the resolve note depending on which modal action was chosen.
+  // which has its own live path: 'open' → 'comparing' (modal) →
+  // 'confirmLearn' (learn-from-this-decision prompt, reject only) →
+  // 'resolved', with the resolve note depending on which action/choice
+  // was taken along the way.
   const [phase, setPhase] = useState('open')
   const [resolveNote, setResolveNote] = useState(item.resolveNote)
 
@@ -54,6 +60,15 @@ function AttentionCard({ item, onResolve, autoCompareTrigger }) {
     setPhase('comparing')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoCompareTrigger])
+
+  // Cue-driven auto-reject — fires the same transition the modal's own
+  // "Reject duplicate" button does, landing on the learn prompt rather
+  // than resolving immediately.
+  useEffect(() => {
+    if (!autoRejectTrigger) return
+    setPhase('confirmLearn')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRejectTrigger])
 
   function resolve(note) {
     if (note) setResolveNote(note)
@@ -130,16 +145,84 @@ function AttentionCard({ item, onResolve, autoCompareTrigger }) {
 
       {/* duplicate-request comparison (live path, not tied to the rehearsed
           identity-match/escalate script) — modal, so it reads as a real
-          decision point rather than another inline card. */}
+          decision point rather than another inline card. Rejecting doesn't
+          resolve immediately — it hands off to the learn-from-this-decision
+          prompt below. */}
       {phase === 'comparing' && item.duplicate && (
         <DuplicateModal
           request={item.request}
           duplicate={item.duplicate}
           onClose={() => setPhase('open')}
-          onReject={() => resolve(item.rejectNote)}
+          onReject={() => setPhase('confirmLearn')}
           onKeep={() => resolve(item.keepNote)}
         />
       )}
+
+      {/* Learn-from-this-decision prompt — only reachable after "Reject
+          duplicate," since it's specifically asking permission to teach
+          the agent to auto-reject matching duplicates going forward.
+          Confirm and deny both finalize the rejection; only the resolve
+          note (and whether the agent "learns") differs. */}
+      {phase === 'confirmLearn' && (
+        <LearnPromptModal
+          request={item.request}
+          onDeny={() => resolve(item.rejectNote)}
+          onConfirm={() => resolve(item.rejectLearnNote || item.rejectNote)}
+        />
+      )}
+    </div>
+  )
+}
+
+// Learn-from-this-decision prompt — appears once a duplicate has been
+// rejected, asking whether the agent should remember this pattern (matching
+// name + email + request type) and auto-reject similar duplicates without
+// asking next time. A deliberately small, single-question overlay so it
+// reads as a follow-up decision, not a second comparison.
+function LearnPromptModal({ request, onDeny, onConfirm }) {
+  return (
+    <div
+      role="presentation"
+      onClick={onDeny}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(20, 24, 29, 0.45)',
+        display: 'grid',
+        placeItems: 'center',
+        zIndex: 41,
+        padding: 'var(--space-4)',
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Learn from rejecting ${request} as a duplicate`}
+        onClick={(e) => e.stopPropagation()}
+        className="anim-enter"
+        style={{
+          width: 400,
+          maxWidth: '100%',
+          background: 'var(--ot-surface)',
+          border: '1px solid var(--ot-border)',
+          borderRadius: 'var(--radius-card)',
+          boxShadow: 'var(--shadow-overlay)',
+          padding: 'var(--space-4)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <AgentMark size={13} />
+          <span style={{ font: '600 15px "Open Sans", sans-serif', color: 'var(--ot-ink)' }}>Learn from this decision?</span>
+        </div>
+        <p style={{ font: 'var(--fs-meta)', color: 'var(--ot-ink-2)', marginTop: 8, lineHeight: 1.5 }}>
+          {request} was rejected as a duplicate. Should I automatically reject future requests that match on name,
+          email, and request type the same way — without asking first?
+        </p>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-4)' }}>
+          <PrimaryAction label="Yes, learn and auto-reject" onClick={onConfirm} />
+          <QuietAction label="No, ask me each time" onClick={onDeny} />
+        </div>
+      </div>
     </div>
   )
 }

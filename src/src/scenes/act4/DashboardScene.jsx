@@ -23,17 +23,23 @@ import { REPORT_PAGES } from '../ReportScene'
 // blocks; one trend chart; a compact distribution row; and the deliberately
 // subordinated request queue (~35% viewport). Below it, the needs-attention
 // list (§4.2). This is mostly a [CLICK] surface (rehearsal card: Act 4 =
-// 0 cues + 4 clicks), but it registers two further cue-driven beats: beat 1
-// scrolls down to reveal the needs-attention section (the same scroll the
+// 0 cues + 4 clicks), but it registers three further cue-driven beats: beat
+// 1 scrolls down to reveal the needs-attention section (the same scroll the
 // AI-summary banner's "View needs-attention" link and the "Awaiting human"
 // stat block already trigger on click, just fired on advance instead of a
-// manual click), and beat 2 opens the "Compare requests" modal for the
-// duplicate data-deletion request (DR-4215, fixtures id 3) — the same modal
-// its own action button opens, triggered here so advancing the cue deck
-// demonstrates the duplicate-review flow without the presenter driving it
-// by hand. Number key 4 still lands on beat 0.
+// manual click); beat 2 opens the "Compare requests" modal for the duplicate
+// data-deletion request (DR-4215, fixtures id 3) — the same modal its own
+// action button opens; and beat 3 clicks that modal's "Reject duplicate,"
+// surfacing the learn-from-this-decision prompt (confirm/deny auto-rejecting
+// matching duplicates going forward) — each fired on advance instead of the
+// presenter driving it by hand. Number key 4 still lands on beat 0.
 
-const BEATS = ['Dashboard overview', 'Needs your attention', 'Compare duplicate request']
+const BEATS = [
+  'Dashboard overview',
+  'Needs your attention',
+  'Compare duplicate request',
+  'Reject duplicate → learn prompt',
+]
 const DUPLICATE_COMPARE_ITEM_ID = 3
 
 export function DashboardScene() {
@@ -47,19 +53,21 @@ export function DashboardScene() {
   )
   const { sceneId } = useCue()
 
-  // autoCompareCount increments each time beat 2 is entered via the cue
-  // deck, telling NeedsAttention to open the compare-requests modal for
-  // DUPLICATE_COMPARE_ITEM_ID — guarded on sceneId (not just beat) since
-  // `beat` still holds the PREVIOUS scene's leftover index for one render
-  // right after a cross-scene navigation into this one.
+  // autoCompareCount increments on beat 2 (opens the compare modal);
+  // autoRejectCount increments on beat 3 (clicks "Reject duplicate" inside
+  // it, surfacing the learn prompt) — both guarded on sceneId (not just
+  // beat) since `beat` still holds the PREVIOUS scene's leftover index for
+  // one render right after a cross-scene navigation into this one.
   const [autoCompareCount, setAutoCompareCount] = useState(0)
+  const [autoRejectCount, setAutoRejectCount] = useState(0)
 
   useEffect(() => {
     if (sceneId !== 'dashboard') return
-    if (beat === 1 || beat === 2) {
+    if (beat === 1 || beat === 2 || beat === 3) {
       document.getElementById('needs-attention')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
     if (beat === 2) setAutoCompareCount((n) => n + 1)
+    if (beat === 3) setAutoRejectCount((n) => n + 1)
   }, [beat, sceneId])
 
   const [timeframe, setTimeframe] = useState(DEFAULT_TIMEFRAME)
@@ -120,6 +128,8 @@ export function DashboardScene() {
           onResolve={handleResolve}
           autoCompareId={DUPLICATE_COMPARE_ITEM_ID}
           autoCompareTrigger={autoCompareCount}
+          autoRejectId={DUPLICATE_COMPARE_ITEM_ID}
+          autoRejectTrigger={autoRejectCount}
         />
       </PageBody>
     </div>

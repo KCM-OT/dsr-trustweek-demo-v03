@@ -578,6 +578,7 @@
    "body": "Name and email on this deletion request match DR-4179, also a data deletion request submitted 4 days ago. Confirm these are the same person before I process both.",
    "action": "Compare requests",
    "rejectNote": "Rejected as duplicate · DR-4215 closed, referencing DR-4179.",
+   "rejectLearnNote": "Rejected as duplicate · DR-4215 closed, referencing DR-4179. Agent will auto-reject matching duplicates going forward.",
    "keepNote": "Duplicate flag cleared · Both requests will be processed independently.",
    "duplicate": {
     "type": "Data deletion",
@@ -654,6 +655,7 @@
    "body": "This access request matches AR-4188 — same requester, submitted 12 days ago and already fulfilled. Confirm before I start a new extract.",
    "action": "Compare requests",
    "rejectNote": "Rejected as duplicate · AR-4230 closed, referencing AR-4188.",
+   "rejectLearnNote": "Rejected as duplicate · AR-4230 closed, referencing AR-4188. Agent will auto-reject matching duplicates going forward.",
    "keepNote": "Duplicate flag cleared · AR-4230 will proceed as a new extract.",
    "duplicate": {
     "type": "Access request",
