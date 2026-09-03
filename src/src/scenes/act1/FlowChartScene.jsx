@@ -228,10 +228,11 @@ const CARDS = [
 ]
 
 // Not part of the Figma frame — this card only exists once the agent chat
-// (below) makes the scripted edit, so it has no dots/connector artwork of
+// (below) makes the scripted edit, so it has no exported connector SVG of
 // its own. It stacks directly under "Privacy sign-off: redactions" (same
-// x, lane still 'access') and is joined to it with a plain drawn line
-// rather than exported connector SVG.
+// x, lane still 'access') and is joined to it with a drawn vertical line
+// plus a matching pair of EdgeDots (bottom of the sign-off card, top of
+// this card), so the link reads the same as the design's real connectors.
 const ESCALATION_CARD = {
   id: 'access-escalate-legal',
   lane: 'access',
@@ -566,16 +567,51 @@ export function FlowChartScene() {
 
           {escalationAdded && (
             <>
+              {/* Vertical link from the sign-off card's bottom edge (270 + CARD_H)
+                  down to this card's top edge, centered on both cards' shared x. */}
               <span
                 className="anim-enter"
                 aria-hidden="true"
                 style={{
                   position: 'absolute',
-                  left: ESCALATION_CARD.x + CARD_W / 2 - 1,
-                  top: 333,
-                  width: 2,
-                  height: ESCALATION_CARD.y - 333,
+                  left: ESCALATION_CARD.x + CARD_W / 2 - 2,
+                  top: 270 + CARD_H,
+                  width: 4,
+                  height: ESCALATION_CARD.y - (270 + CARD_H),
                   background: CARD_BORDER,
+                  opacity: laneDimmed(focus, ESCALATION_CARD.lane) ? 0.3 : 1,
+                }}
+              />
+              {/* EdgeDots at each end, matching how every other connector in the
+                  diagram meets its card (white dot, light ring) — sign-off's
+                  bottom edge and this card's top edge. */}
+              <span
+                className="anim-enter"
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  left: ESCALATION_CARD.x + CARD_W / 2 - DOT / 2,
+                  top: 270 + CARD_H - DOT / 2,
+                  width: DOT,
+                  height: DOT,
+                  background: SURFACE,
+                  border: `2px solid ${CARD_BORDER}`,
+                  borderRadius: '50%',
+                  opacity: laneDimmed(focus, ESCALATION_CARD.lane) ? 0.3 : 1,
+                }}
+              />
+              <span
+                className="anim-enter"
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  left: ESCALATION_CARD.x + CARD_W / 2 - DOT / 2,
+                  top: ESCALATION_CARD.y - DOT / 2,
+                  width: DOT,
+                  height: DOT,
+                  background: SURFACE,
+                  border: `2px solid ${CARD_BORDER}`,
+                  borderRadius: '50%',
                   opacity: laneDimmed(focus, ESCALATION_CARD.lane) ? 0.3 : 1,
                 }}
               />
