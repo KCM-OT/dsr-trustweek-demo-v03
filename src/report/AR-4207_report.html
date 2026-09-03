@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Your personal data report — Marcus Bell — AR-4207</title>
+<style>
+  /* Meridian access report — spec_pack/05_pdf_report_spec.md. US Letter,
+     9 pages, 0.9in margins, Meridian corporate system (02 §2): navy,
+     copper, cream, Outfit headings. Rendered to PDF by render-pdf.mjs via
+     headless Chromium; the committed artifact is the static PDF. Every
+     number reconciles with 04_data_fixtures.json — see RECONCILIATION
+     comments inline. */
+
+  @font-face {
+    font-family: 'Outfit';
+    src: url('../public/fonts/outfit-variable-latin.woff2') format('woff2');
+    font-weight: 100 900;
+    font-display: block;
+  }
+
+  :root {
+    --navy: #14304a;
+    --copper: #c56a2d;
+    --cream: #faf6f0;
+    --ink: #22303c;
+    --ink-2: #5a6a78;
+    --hairline: #e3ddd3;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page { size: letter; margin: 0; }
+
+  html, body { background: #fff; }
+
+  body {
+    font: 10.5pt/1.55 -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .page {
+    position: relative;
+    width: 8.5in;
+    height: 11in;
+    padding: 0.9in;
+    overflow: hidden;
+    page-break-after: always;
+    background: #fff;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  h1, h2, h3, .outfit { font-family: 'Outfit', sans-serif; color: var(--navy); }
+
+  /* --- footer (pages 2–9): thin copper rule, small wordmark left, ref right --- */
+  .footer {
+    position: absolute;
+    left: 0.9in; right: 0.9in; bottom: 0.55in;
+  }
+  .footer .rule { height: 1px; background: var(--copper); margin-bottom: 7pt; }
+  .footer .row { display: flex; align-items: center; justify-content: space-between; }
+  .footer .ref { font-size: 7.5pt; color: var(--ink-2); letter-spacing: 0.02em; }
+
+  /* --- section heading grammar --- */
+  .kicker {
+    font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 8pt;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--copper);
+    margin-bottom: 8pt;
+  }
+  h2.section { font-size: 19pt; font-weight: 600; line-height: 1.25; margin-bottom: 14pt; }
+  h3.sub { font-size: 12pt; font-weight: 600; margin: 0 0 8pt; }
+  .source-tag { font-size: 8.5pt; color: var(--ink-2); margin-bottom: 14pt; }
+  .source-tag em { font-style: normal; color: var(--copper); }
+
+  /* --- tables: navy header rows, 9.5pt, airy --- */
+  table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+  thead th {
+    background: var(--navy); color: #fff;
+    font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 8.5pt;
+    letter-spacing: 0.04em; text-align: left; padding: 6pt 9pt;
+  }
+  tbody td { padding: 6.5pt 9pt; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; }
+  .whereref { font-size: 7.5pt; color: var(--copper); white-space: nowrap; }
+  tfoot td {
+    padding: 6.5pt 9pt; border-top: 1.5px solid var(--navy);
+    font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 9.5pt; color: var(--navy);
+  }
+
+  /* page 4 carries three tables — compact register so it sits inside the
+     11in box without dropping any disclosure rows */
+  table.compact { line-height: 1.4; }
+  table.compact thead th { padding: 4.5pt 8pt; }
+  table.compact tbody td { padding: 4pt 8pt; }
+  table.compact .whereref { font-size: 7pt; }
+  .page-4 .kicker { margin-bottom: 6pt; }
+  .page-4 h2.section { font-size: 17pt; margin-bottom: 9pt; }
+  .page-4 h3.sub { font-size: 11pt; margin-bottom: 4pt; }
+
+  /* --- redaction bars: true black, tiny REDACTED microlabel --- */
+  .redact {
+    display: inline-block; background: #000; color: #fff;
+    font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 4.6pt;
+    letter-spacing: 0.14em; text-align: center; line-height: 10.5pt;
+    height: 10.5pt; vertical-align: -1.5pt; border-radius: 0;
+  }
+
+  /* two-column field grid (page 5) */
+  .fields { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28pt; }
+  .field { display: flex; justify-content: space-between; gap: 12pt; padding: 5pt 0; border-bottom: 1px solid var(--hairline); font-size: 9.5pt; }
+  .field .k { color: var(--ink-2); }
+  .field .v { text-align: right; }
+</style>
+</head>
+<body>
+
+<!-- ============================ PAGE 1 — COVER ============================
+     Cream field · wordmark · title · for · meta block · one copper meridian
+     line · nothing else. (Footer intentionally omitted here: the cover spec
+     says "Nothing else"; footers run pages 2–9.) -->
+<section class="page" style="background: var(--cream);">
+  <div style="margin-top: 0.1in;">
+    <!-- Meridian wordmark: copper rule through the E crossbar, passing
+         behind the navy letterforms, overhanging both ends (brand layer
+         geometry from src/brand/MeridianWordmark.jsx). -->
+    <svg width="240" height="30" viewBox="0 0 320 40" role="img" aria-label="Meridian Brands">
+      <line x1="0" y1="21.4" x2="320" y2="21.4" stroke="#c56a2d" stroke-width="2" />
+      <text x="160" y="30.5" text-anchor="middle" textLength="272" lengthAdjust="spacing"
+            style="font-family: 'Outfit'; font-weight: 600; font-size: 27px; fill: #14304a;">MERIDIAN</text>
+    </svg>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; top: 4.15in;">
+    <!-- the one copper meridian line: full-bleed, echoing the wordmark rule -->
+    <div style="height: 2px; background: var(--copper);"></div>
+  </div>
+
+  <div style="position: absolute; left: 0.9in; right: 0.9in; top: 4.55in;">
+    <h1 style="font-size: 33pt; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em;">
+      Your personal data report
+    </h1>
+    <div class="outfit" style="font-size: 14pt; font-weight: 600; color: var(--copper); margin-top: 16pt;">
+      Marcus Bell
+    </div>
+    <div style="font-size: 9.5pt; color: var(--ink-2); margin-top: 26pt; line-height: 1.8;">
+      Request AR-4207 · Requested July 8, 2026 · Prepared July 10, 2026<br />
+      Covers: Northwind Outfitters, Cascade Home, Alpine Rewards
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PAGE 2 — LETTER =========================== -->
+<section class="page">
+  <div class="kicker">A letter, not a form</div>
+  <h2 class="section">Here&rsquo;s everything we have.</h2>
+
+  <div style="max-width: 5.6in; font-size: 11pt; line-height: 1.7; display: grid; gap: 11pt;">
+    <p>Hi Marcus,</p>
+    <p>On July 8 you asked to see the personal data Meridian holds about you. This report is our complete answer. It covers all three of our brands, every system where your data lives, and your full history with us &mdash; including your Alpine Rewards points, since we know that&rsquo;s what prompted your question.</p>
+    <p>A quick guide to what follows: pages 3&ndash;4 summarize what we collect and why, as California law asks us to lay out. Pages 5&ndash;8 are your actual data. Page 9 explains your options from here &mdash; including deletion, if you still want it after reading.</p>
+    <p>One note on privacy that isn&rsquo;t yours: a few of your support conversations mentioned other people &mdash; our agents, and in one case another customer from a shared purchase. We&rsquo;ve blacked out their details, for the same reason we&rsquo;d black out yours in someone else&rsquo;s report.</p>
+    <p>If anything here looks wrong, page 9 tells you how to fix it.</p>
+    <p style="margin-top: 6pt;">&mdash; The Meridian Privacy Team</p>
+  </div>
+
+  <div class="footer"><div class="rule"></div><div class="row"><svg width="86" height="11" viewBox="0 0 320 40"><line x1="0" y1="21.4" x2="320" y2="21.4" stroke="#c56a2d" stroke-width="2.5"/><text x="160" y="30.5" text-anchor="middle" textLength="272" lengthAdjust="spacing" style="font-family:'Outfit';font-weight:600;font-size:27px;fill:#14304a;">MERIDIAN</text></svg><span class="ref">Meridian Brands · Privacy Report AR-4207 · Page 2 of 9</span></div></div>
+</section>
+
+<!-- =================== PAGE 3 — WHAT WE COLLECT (1 of 2) ================== -->
+<section class="page">
+  <div class="kicker">What we collect and why · CCPA/CPRA disclosures</div>
+  <h2 class="section">The categories, in plain language.</h2>
+
+  <table>
+    <thead><tr><th style="width: 26%;">Category</th><th>What that means for you</th><th style="width: 24%;"></th></tr></thead>
+    <tbody>
+      <tr><td>Identifiers</td><td>Your name, email address, postal address, phone number, and your customer ID.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;5</td></tr>
+      <tr><td>Commercial information</td><td>Your orders, returns and exchanges, and your Alpine Rewards points activity.</td><td class="whereref">where this appears in your data &rarr; pp.&nbsp;6&ndash;7</td></tr>
+      <tr><td>Internet activity</td><td>Which of our emails you open and click, and your visits to our sites while signed in.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;8</td></tr>
+      <tr><td>Geolocation (coarse)</td><td>The city and state we ship to and the general region your devices report. Never precise location.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;5</td></tr>
+      <tr><td>Inferences</td><td>Interest groups we place you in to pick what to show you &mdash; for you, &ldquo;Hiking &amp; trail&rdquo; and &ldquo;Home textiles.&rdquo;</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;8</td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size: 9pt; color: var(--ink-2); margin-top: 14pt; max-width: 5.8in;">
+    California law (CCPA/CPRA) asks us to lay out the categories of personal information we collect, where it comes
+    from, why we use it, and who we share it with. This page and the next are that summary; pages 5&ndash;8 are the
+    data itself.
+  </p>
+
+  <div class="footer"><div class="rule"></div><div class="row"><svg width="86" height="11" viewBox="0 0 320 40"><line x1="0" y1="21.4" x2="320" y2="21.4" stroke="#c56a2d" stroke-width="2.5"/><text x="160" y="30.5" text-anchor="middle" textLength="272" lengthAdjust="spacing" style="font-family:'Outfit';font-weight:600;font-size:27px;fill:#14304a;">MERIDIAN</text></svg><span class="ref">Meridian Brands · Privacy Report AR-4207 · Page 3 of 9</span></div></div>
+</section>
+
+<!-- =================== PAGE 4 — WHAT WE COLLECT (2 of 2) ================== -->
+<section class="page page-4">
+  <div class="kicker">What we collect and why · CCPA/CPRA disclosures</div>
+  <h2 class="section">Where it comes from, and where it goes.</h2>
+
+  <h3 class="sub">Sources</h3>
+  <table class="compact" style="margin-bottom: 12pt;">
+    <thead><tr><th style="width: 26%;">Source</th><th>Example</th><th style="width: 27%;"></th></tr></thead>
+    <tbody>
+      <tr><td>You, directly</td><td>Your account details, your orders, and what you tell our support team.</td><td class="whereref">where this appears in your data &rarr; pp.&nbsp;5,&nbsp;8</td></tr>
+      <tr><td>Your devices</td><td>Email opens and clicks, signed-in visits to our sites.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;8</td></tr>
+      <tr><td>Our stores</td><td>In-store purchases linked to your Alpine Rewards number.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;7</td></tr>
+      <tr><td>Alpine Rewards partners</td><td>Points earned through partner offers you joined.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;6</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">Purposes</h3>
+  <table class="compact" style="margin-bottom: 12pt;">
+    <thead><tr><th style="width: 26%;">Purpose</th><th>In practice</th><th style="width: 27%;"></th></tr></thead>
+    <tbody>
+      <tr><td>Fulfill your orders</td><td>Taking payment, shipping, returns and exchanges.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;7</td></tr>
+      <tr><td>Run Alpine Rewards</td><td>Tracking the points you earn, spend, and the ones about to expire.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;6</td></tr>
+      <tr><td>Support you</td><td>Keeping the history of your conversations so you never repeat yourself.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;8</td></tr>
+      <tr><td>Marketing, with consent</td><td>Emails you&rsquo;ve opted into. You control this on page 9.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;8</td></tr>
+      <tr><td>Fraud prevention</td><td>Spotting unusual account activity to protect you.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;5</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">Third parties we share with</h3>
+  <table class="compact">
+    <thead><tr><th style="width: 26%;">Who</th><th>Why</th><th style="width: 27%;"></th></tr></thead>
+    <tbody>
+      <tr><td>Our payment processor</td><td>To take your payment securely. They see card details; we don&rsquo;t.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;7</td></tr>
+      <tr><td>Our delivery carriers</td><td>Your name and shipping address, to get orders to your door.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;5</td></tr>
+      <tr><td>Our analytics provider</td><td>Aggregated usage patterns. Never your name or contact details.</td><td class="whereref">where this appears in your data &rarr; p.&nbsp;8</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer"><div class="rule"></div><div class="row"><svg width="86" height="11" viewBox="0 0 320 40"><line x1="0" y1="21.4" x2="320" y2="21.4" stroke="#c56a2d" stroke-width="2.5"/><text x="160" y="30.5" text-anchor="middle" textLength="272" lengthAdjust="spacing" style="font-family:'Outfit';font-weight:600;font-size:27px;fill:#14304a;">MERIDIAN</text></svg><span class="ref">Meridian Brands · Privacy Report AR-4207 · Page 4 of 9</span></div></div>
+</section>
+
+<!-- ==================== PAGE 5 — PROFILE & ACCOUNTS =======================
+     RECONCILIATION: 22 fields (fixtures activity: "Salesforce: retrieved 1
+     customer record, 22 fields", retrieved 2026-07-09) · customer ID
+     C-102-448-871 · member since Mar 14 2019 · CA resident. -->
+<section class="page">
+  <div class="kicker">Your data · 1 of 4</div>
+  <h2 class="section">Your profile &amp; accounts.</h2>
+  <div class="source-tag">Source: customer records (Salesforce) · retrieved July 9, 2026 · <em>22 fields</em></div>
+
+  <div class="fields">
+    <div class="field"><span class="k">Full name</span><span class="v">Marcus Bell</span></div>
+    <div class="field"><span class="k">Email</span><span class="v">marcus.bell@&mdash;mail.com</span></div>
+    <div class="field"><span class="k">Phone</span><span class="v">(916) 555-0142</span></div>
+    <div class="field"><span class="k">Date of birth</span><span class="v">August 21, 1987</span></div>
+    <div class="field"><span class="k">Street address</span><span class="v">2214 Juniper Way</span></div>
+    <div class="field"><span class="k">City</span><span class="v">Sacramento</span></div>
+    <div class="field"><span class="k">State</span><span class="v">California</span></div>
+    <div class="field"><span class="k">ZIP</span><span class="v">95816</span></div>
+    <div class="field"><span class="k">Country</span><span class="v">United States</span></div>
+    <div class="field"><span class="k">Preferred language</span><span class="v">English (US)</span></div>
+    <div class="field"><span class="k">Customer ID</span><span class="v">C-102-448-871</span></div>
+    <div class="field"><span class="k">Customer since</span><span class="v">March 14, 2019</span></div>
+    <div class="field"><span class="k">Account status</span><span class="v">Active</span></div>
+    <div class="field"><span class="k">Email verified</span><span class="v">Yes (March 2019)</span></div>
+    <div class="field"><span class="k">Brand relationships</span><span class="v">Northwind · Cascade Home</span></div>
+    <div class="field"><span class="k">Alpine Rewards member</span><span class="v">Yes</span></div>
+    <div class="field"><span class="k">Alpine Rewards number</span><span class="v">AR-88-4417-102</span></div>
+    <div class="field"><span class="k">Email marketing consent</span><span class="v">Opted in (Mar 14, 2019)</span></div>
+    <div class="field"><span class="k">SMS marketing consent</span><span class="v">Opted out (Jun 2, 2021)</span></div>
+    <div class="field"><span class="k">Preferred store</span><span class="v">Northwind Sacramento</span></div>
+    <div class="field"><span class="k">Communication preference</span><span class="v">Email</span></div>
+    <div class="field"><span class="k">Record last updated</span><span class="v">July 9, 2026</span></div>
+  </div>
+
+  <p style="font-size: 9pt; color: var(--ink-2); margin-top: 16pt;">
+    Your account is in good standing across all three brands. The consent states above are yours to change at any
+    time &mdash; page 9 shows you how.
+  </p>
+
+  <div class="footer"><div class="rule"></div><div class="row"><svg width="86" height="11" viewBox="0 0 320 40"><line x1="0" y1="21.4" x2="320" y2="21.4" stroke="#c56a2d" stroke-width="2.5"/><text x="160" y="30.5" text-anchor="middle" textLength="272" lengthAdjust="spacing" style="font-family:'Outfit';font-weight:600;font-size:27px;fill:#14304a;">MERIDIAN</text></svg><span class="ref">Meridian Brands · Privacy Report AR-4207 · Page 5 of 9</span></div></div>
+</section>
+
+<!-- =================== PAGE 6 — ALPINE REWARDS HISTORY ====================
+     RECONCILIATION: balance 12,480 (fixtures marcus.loyalty.points) ·
+     member since 2019-03-14 · next expiry 2,140 on Dec 31 2026 (05 spec).
+     By-year table: earned 20,250 − redeemed 6,750 − expired 1,020 = 12,480.
+     Expiry schedule: 2,140 + 3,480 + 6,860 = 12,480. -->
+<section class="page">
+  <div class="kicker">Your data · 2 of 4</div>
+  <h2 class="section">Your Alpine Rewards history.</h2>
+  <div class="source-tag">Source: internal warehouse extract · retrieved July 10, 2026</div>
+
+  <div style="display: flex; align-items: flex-end; gap: 36pt; margin: 4pt 0 20pt;">
+    <div>
+      <div style="font-size: 8.5pt; color: var(--ink-2); margin-bottom: 3pt;">Current balance</div>
+      <div class="outfit" style="font-size: 34pt; font-weight: 600; line-height: 1;">12,480 <span style="font-size: 13pt; color: var(--copper);">points</span></div>
+    </div>
+    <div style="padding-bottom: 3pt;">
+      <div style="font-size: 8.5pt; color: var(--ink-2); margin-bottom: 3pt;">Member since</div>
+      <div class="outfit" style="font-size: 13pt; font-weight: 600;">March 14, 2019</div>
+    </div>
+  </div>
+
+  <h3 class="sub">Points by year</h3>
+  <table style="margin-bottom: 18pt;">
+    <thead><tr><th>Year</th><th class="num">Earned</th><th class="num">Redeemed</th><th class="num">Expired</th></tr></thead>
+    <tbody>
+      <tr><td>2019</td><td class="num">1,410</td><td class="num">&ndash;</td><td class="num">&ndash;</td></tr>
+      <tr><td>2020</td><td class="num">1,885</td><td class="num">750</td><td class="num">&ndash;</td></tr>
+      <tr><td>2021</td><td class="num">2,240</td><td class="num">1,500</td><td class="num">&ndash;</td></tr>
+      <tr><td>2022</td><td class="num">3,615</td><td class="num">&ndash;</td><td class="num">640</td></tr>
+      <tr><td>2023</td><td class="num">3,120</td><td class="num">2,000</td><td class="num">&ndash;</td></tr>
+      <tr><td>2024</td><td class="num">3,930</td><td class="num">1,250</td><td class="num">380</td></tr>
+      <tr><td>2025</td><td class="num">2,655</td><td class="num">&ndash;</td><td class="num">&ndash;</td></tr>
+      <tr><td>2026 (to date)</td><td class="num">1,395</td><td class="num">1,250</td><td class="num">&ndash;</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td>Total</td><td class="num">20,250</td><td class="num">6,750</td><td class="num">1,020</td></tr>
+      <tr><td colspan="3">Balance (earned &minus; redeemed &minus; expired)</td><td class="num">12,480</td></tr>
+    </tfoot>
+  </table>
+
+  <h3 class="sub">Expiry schedule</h3>
+  <table style="max-width: 4.4in;">
+    <thead><tr><th>Points expire on</th><th class="num">Points</th></tr></thead>
+    <tbody>
+      <tr><td>December 31, 2026 <span style="color: var(--copper); font-size: 8.5pt;">&larr; next expiry</span></td><td class="num">2,140</td></tr>
+      <tr><td>December 31, 2027</td><td class="num">3,480</td></tr>
+      <tr><td>December 31, 2028</td><td class="num">6,860</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer"><div class="rule"></div><div class="row"><svg width="86" height="11" viewBox="0 0 320 40"><line x1="0" y1="21.4" x2="320" y2="21.4" stroke="#c56a2d" stroke-width="2.5"/><text x="160" y="30.5" text-anchor="middle" textLength="272" lengthAdjust="spacing" style="font-family:'Outfit';font-weight:600;font-size:27px;fill:#14304a;">MERIDIAN</text></svg><span class="ref">Meridian Brands · Privacy Report AR-4207 · Page 6 of 9</span></div></div>
+</section>
+
+<!-- =================== PAGE 7 — ORDERS & TRANSACTIONS =====================
+     RECONCILIATION: 28 orders 2019–2026 (05 spec) — 14 shown + truncation
+     line. Includes NW-2024-1180 (named in the p.8 transcript excerpt) and
+     the Dec 2023 shared purchase (redaction finding #2). -->
+<section class="page">
+  <div class="kicker">Your data · 3 of 4</div>
+  <h2 class="section">Your orders &amp; transactions.</h2>
+  <div class="source-tag">Source: internal warehouse extract · retrieved July 10, 2026 · <em>28 orders, 2019&ndash;2026</em></div>
+
+  <table>
+    <thead><tr><th>Date</th><th>Brand</th><th>Order #</th><th class="num">Total</th><th class="num">Points earned</th></tr></thead>
+    <tbody>
+      <tr><td>Jun 21, 2026</td><td>Northwind Outfitters</td><td>NW-2026-0642</td><td class="num">$148.50</td><td class="num">743</td></tr>
+      <tr><td>May 2, 2026</td><td>Cascade Home</td><td>CH-2026-0288</td><td class="num">$64.00</td><td class="num">320</td></tr>
+      <tr><td>Mar 15, 2026</td><td>Northwind Outfitters</td><td>NW-2026-0217</td><td class="num">$212.30</td><td class="num">1,062</td></tr>
+      <tr><td>Dec 28, 2025</td><td>Cascade Home</td><td>CH-2025-1104</td><td class="num">$89.95</td><td class="num">450</td></tr>
+      <tr><td>Oct 9, 2025</td><td>Northwind Outfitters</td><td>NW-2025-0871</td><td class="num">$176.40</td><td class="num">882</td></tr>
+      <tr><td>Jul 19, 2025</td><td>Northwind Outfitters</td><td>NW-2025-0563</td><td class="num">$58.20</td><td class="num">291</td></tr>
+      <tr><td>Apr 6, 2025</td><td>Cascade Home</td><td>CH-2025-0301</td><td class="num">$132.75</td><td class="num">664</td></tr>
+      <tr><td>Dec 12, 2024</td><td>Northwind Outfitters</td><td>NW-2024-1416</td><td class="num">$94.60</td><td class="num">473</td></tr>
+      <tr><td>Sep 3, 2024</td><td>Northwind Outfitters</td><td>NW-2024-1289</td><td class="num">$241.10</td><td class="num">1,206</td></tr>
+      <tr><td>May 27, 2024</td><td>Cascade Home</td><td>CH-2024-0512</td><td class="num">$77.35</td><td class="num">387</td></tr>
+      <tr><td>Jan 28, 2024</td><td>Northwind Outfitters</td><td>NW-2024-1180</td><td class="num">$163.80</td><td class="num">819</td></tr>
+      <tr><td>Dec 14, 2023</td><td>Northwind Outfitters</td><td>NW-2023-0958</td><td class="num">$198.45</td><td class="num">992</td></tr>
+      <tr><td>Oct 2, 2023</td><td>Cascade Home</td><td>CH-2023-0640</td><td class="num">$45.90</td><td class="num">230</td></tr>
+      <tr><td>Jul 8, 2023</td><td>Northwind Outfitters</td><td>NW-2023-0512</td><td class="num">$121.60</td><td class="num">608</td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size: 9.5pt; color: var(--ink-2); font-style: italic; margin-top: 12pt;">
+    &hellip;and 14 earlier orders, included in the attached data file.
+  </p>
+
+  <div class="footer"><div class="rule"></div><div class="row"><svg width="86" height="11" viewBox="0 0 320 40"><line x1="0" y1="21.4" x2="320" y2="21.4" stroke="#c56a2d" stroke-width="2.5"/><text x="160" y="30.5" text-anchor="middle" textLength="272" lengthAdjust="spacing" style="font-family:'Outfit';font-weight:600;font-size:27px;fill:#14304a;">MERIDIAN</text></svg><span class="ref">Meridian Brands · Privacy Report AR-4207 · Page 7 of 9</span></div></div>
+</section>
+
+<!-- ============= PAGE 8 — MARKETING PROFILE & SUPPORT HISTORY =============
+     RECONCILIATION: 340 email events (fixtures activity: Marketo) · 6
+     support conversations (fixtures redaction.source) · excerpt = fixtures
+     marcus.redaction.excerpts[0] (ZD-30117, 2024-02-09) with the █ runs as
+     true black bars · 24 redactions = 14+3+7 (fixtures findings). -->
+<section class="page">
+  <div class="kicker">Your data · 4 of 4</div>
+  <h2 class="section">Your marketing profile &amp; support history.</h2>
+
+  <h3 class="sub">Marketing profile</h3>
+  <div class="source-tag" style="margin-bottom: 8pt;">Source: marketing profiles (Marketo) · retrieved July 9, 2026</div>
+  <table style="max-width: 6in; margin-bottom: 16pt;">
+    <tbody>
+      <tr><td style="color: var(--ink-2); width: 34%;">Email subscription</td><td>Subscribed (since March 2019)</td></tr>
+      <tr><td style="color: var(--ink-2);">SMS subscription</td><td>Unsubscribed (June 2021)</td></tr>
+      <tr><td style="color: var(--ink-2);">Interest segments</td><td>Hiking &amp; trail · Home textiles</td></tr>
+      <tr><td style="color: var(--ink-2);">Engagement</td><td>340 email events since 2019 · last open July 6, 2026</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">Support history</h3>
+  <div class="source-tag" style="margin-bottom: 8pt;">Source: support tickets + transcripts (Zendesk) · retrieved July 9, 2026 · <em>6 conversations, 2019&ndash;2026</em></div>
+  <table style="margin-bottom: 14pt;">
+    <thead><tr><th>Ticket</th><th>Date</th><th>Topic</th><th>Resolution</th></tr></thead>
+    <tbody>
+      <tr><td>ZD-11248</td><td>Jun 12, 2019</td><td>Sizing question on trail boots</td><td>Resolved</td></tr>
+      <tr><td>ZD-15630</td><td>Nov 3, 2020</td><td>Delayed delivery</td><td>Shipping refunded</td></tr>
+      <tr><td>ZD-21077</td><td>Sep 18, 2021</td><td>Alpine Rewards points missing</td><td>Points restored</td></tr>
+      <tr><td>ZD-28414</td><td>Dec 14, 2023</td><td>Shared purchase billing question</td><td>Order split</td></tr>
+      <tr><td>ZD-30117</td><td>Feb 9, 2024</td><td>Exchange + refund difference</td><td>Refund issued</td></tr>
+      <tr><td>ZD-33902</td><td>Apr 27, 2026</td><td>Account access help</td><td>Resolved</td></tr>
+    </tbody>
+  </table>
+
+  <div style="border: 1px solid var(--hairline); border-left: 3px solid var(--navy); padding: 10pt 12pt; max-width: 6.2in;">
+    <div style="font-size: 8pt; color: var(--ink-2); margin-bottom: 6pt;">Transcript excerpt · Ticket ZD-30117 · February 9, 2024</div>
+    <p style="font-size: 9.5pt; line-height: 1.75;">
+      &ldquo;Thanks for your patience, Marcus. I&rsquo;ve linked your exchange to account
+      <span class="redact" style="width: 64pt;">REDACTED</span> and refunded the difference. Your Alpine Rewards
+      points from order NW-2024-1180 will post within 48 hours. &mdash;
+      <span class="redact" style="width: 46pt;">REDACTED</span> <span class="redact" style="width: 32pt;">REDACTED</span>,
+      Northwind Support&rdquo;
+    </p>
+  </div>
+  <p style="font-size: 8.5pt; color: var(--ink-2); margin-top: 8pt; max-width: 6.2in;">
+    Names and details belonging to other people are redacted. 24 redactions were made across your transcripts and
+    reviewed by our privacy team.
+  </p>
+
+  <div class="footer"><div class="rule"></div><div class="row"><svg width="86" height="11" viewBox="0 0 320 40"><line x1="0" y1="21.4" x2="320" y2="21.4" stroke="#c56a2d" stroke-width="2.5"/><text x="160" y="30.5" text-anchor="middle" textLength="272" lengthAdjust="spacing" style="font-family:'Outfit';font-weight:600;font-size:27px;fill:#14304a;">MERIDIAN</text></svg><span class="ref">Meridian Brands · Privacy Report AR-4207 · Page 8 of 9</span></div></div>
+</section>
+
+<!-- ===================== PAGE 9 — WHAT YOU CAN DO NEXT ==================== -->
+<section class="page">
+  <div class="kicker">From here</div>
+  <h2 class="section">What you can do next.</h2>
+
+  <div style="display: grid; gap: 14pt; max-width: 6.2in;">
+    <div style="border: 1px solid var(--hairline); border-left: 3px solid var(--copper); padding: 12pt 14pt;">
+      <h3 class="sub" style="margin-bottom: 4pt;">Delete your data</h3>
+      <p style="font-size: 10pt; line-height: 1.6;">
+        Still want to? You can. One honest note first: deleting your account permanently forfeits your 12,480
+        Alpine Rewards points, and we can&rsquo;t restore them later. If you&rsquo;re sure, start a deletion request
+        the same way you started this one &mdash; it takes about two minutes.
+      </p>
+    </div>
+    <div style="border: 1px solid var(--hairline); border-left: 3px solid var(--copper); padding: 12pt 14pt;">
+      <h3 class="sub" style="margin-bottom: 4pt;">Fix something</h3>
+      <p style="font-size: 10pt; line-height: 1.6;">
+        If anything in this report looks wrong &mdash; an address, an order, a preference &mdash; ask us to correct
+        it. Submit a correction request and point us at the page number; we&rsquo;ll take it from there.
+      </p>
+    </div>
+    <div style="border: 1px solid var(--hairline); border-left: 3px solid var(--copper); padding: 12pt 14pt;">
+      <h3 class="sub" style="margin-bottom: 4pt;">Ask us anything</h3>
+      <p style="font-size: 10pt; line-height: 1.6;">
+        Questions about this report, your points, or how we handle your data? Write to
+        <span style="color: var(--navy); font-weight: 600;">privacy@meridianbrands.com</span> and reference your
+        request number. A person reads every message.
+      </p>
+    </div>
+  </div>
+
+  <p style="font-size: 8.5pt; color: var(--ink-2); margin-top: 22pt;">
+    This report was prepared with automated assistance and reviewed by the Meridian privacy team. Reference AR-4207.
+  </p>
+
+  <div class="footer"><div class="rule"></div><div class="row"><svg width="86" height="11" viewBox="0 0 320 40"><line x1="0" y1="21.4" x2="320" y2="21.4" stroke="#c56a2d" stroke-width="2.5"/><text x="160" y="30.5" text-anchor="middle" textLength="272" lengthAdjust="spacing" style="font-family:'Outfit';font-weight:600;font-size:27px;fill:#14304a;">MERIDIAN</text></svg><span class="ref">Meridian Brands · Privacy Report AR-4207 · Page 9 of 9</span></div></div>
+</section>
+
+</body>
+</html>

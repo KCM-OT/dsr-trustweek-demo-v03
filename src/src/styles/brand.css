@@ -1,0 +1,18 @@
+/* Meridian brand layer — 02_design_system.md §2. Headings use Outfit (the
+   spec's "geometric-warm sans … via bundled font files; pick one, use
+   everywhere Meridian"); the woff2 is bundled in public/fonts so the demo
+   runs fully offline (README non-negotiable #1). font-display: block so the
+   wordmark never flashes a fallback face on stage. Color tokens for both
+   Meridian corporate and Northwind Outfitters live in tokens.css. */
+
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+  src: url('/fonts/outfit-variable-latin.woff2') format('woff2');
+}
+
+:root {
+  --mer-font: 'Outfit', 'Avenir Next', 'Futura', sans-serif;
+}
