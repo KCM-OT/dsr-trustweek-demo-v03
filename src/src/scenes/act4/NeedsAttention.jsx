@@ -147,9 +147,10 @@ function AttentionCard({ item, onResolve, autoCompareTrigger, autoRejectTrigger,
         {resolved ? (
           <ResolveNote note={resolveNote} />
         ) : phase === 'reviewing' ? (
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
             <PrimaryAction label="Approve match" onClick={() => resolve()} />
             <QuietAction label="Not a match" />
+            <TeamsAction label="Ask system owner" />
           </div>
         ) : item.scripted ? (
           <PrimaryAction
@@ -477,6 +478,34 @@ function QuietAction({ label, onClick }) {
         cursor: 'pointer',
       }}
     >
+      {label}
+    </button>
+  )
+}
+
+// Escalation action for the identity-match spot-check — hands the low-
+// confidence match to the Salesforce system owner over Teams rather than
+// resolving it solo. Inert on stage (authenticity only, like the other
+// non-scripted actions): it opens the conversation, it doesn't resolve
+// the card.
+function TeamsAction({ label, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 7,
+        padding: '7px 14px',
+        borderRadius: 'var(--radius-control)',
+        border: '1px solid var(--ot-border)',
+        background: 'var(--ot-surface)',
+        color: 'var(--ot-ink-2)',
+        font: '600 13px "Open Sans", sans-serif',
+        cursor: 'pointer',
+      }}
+    >
+      <img src="/icons/microsoft-teams.svg" alt="" width={15} height={15} style={{ flexShrink: 0 }} />
       {label}
     </button>
   )
