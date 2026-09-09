@@ -331,6 +331,12 @@ function currentStageIndex(beat) {
   return i === -1 ? marcus.plan.length - 1 : i
 }
 
+// Fixed 6-stage lifecycle labels shown on the chevron itself — the
+// program-level stage names (Verify identity → ... → Complete), distinct
+// from marcus.plan's per-task titles (e.g. "Retrieve customer records"),
+// which stay in the "Step X of Y · <task>" caption below the bar.
+const STAGE_NAMES = ['Verify identity', 'Open', 'Processing', 'Review', 'Exceptions', 'Complete']
+
 // Stage bar — occupies the same "where is this request in its process"
 // role as the legacy blue chevron stage bar this scene's skeleton is based
 // on, just driven by the matched workflow's steps (marcus.plan) instead of
@@ -344,7 +350,7 @@ function WorkflowStageChevron({ beat }) {
 
   return (
     <div className="anim-enter" style={{ marginBottom: 'var(--space-4)' }}>
-      <div style={{ display: 'flex', gap: 3, height: 30 }}>
+      <div style={{ display: 'flex', gap: 3, height: 40 }}>
         {marcus.plan.map((item, i) => {
           const done = states[i] === 'Done'
           const current = i === currentIndex
@@ -366,14 +372,17 @@ function WorkflowStageChevron({ beat }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                textAlign: 'center',
+                padding: '0 4px',
                 clipPath,
                 background: done ? 'var(--ot-green)' : current ? 'var(--ot-link)' : 'var(--ot-bg)',
                 border: done || current ? 'none' : '1px solid var(--ot-border)',
                 color: done || current ? '#fff' : 'var(--ot-ink-3)',
-                font: '600 12px "Open Sans", sans-serif',
+                font: '600 11px "Open Sans", sans-serif',
+                lineHeight: 1.2,
               }}
             >
-              {i + 1}
+              {STAGE_NAMES[i] ?? i + 1}
             </div>
           )
         })}
