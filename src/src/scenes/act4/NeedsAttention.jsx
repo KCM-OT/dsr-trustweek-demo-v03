@@ -145,7 +145,7 @@ function AttentionCard({ item, onResolve, autoCompareTrigger, autoRejectTrigger,
 
       <div style={{ marginTop: 'var(--space-3)' }}>
         {resolved ? (
-          <ResolveNote note={resolveNote} />
+          <ResolveNote note={resolveNote} icon={item.resolveIcon} />
         ) : phase === 'reviewing' ? (
           <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
             <PrimaryAction label="Approve match" onClick={() => resolve()} />
@@ -422,7 +422,11 @@ function Cell({ children, head, label, style }) {
   )
 }
 
-function ResolveNote({ note }) {
+// icon:"teams" swaps the usual green checkmark badge for the Microsoft
+// Teams mark — used when the resolve note itself references a Teams
+// message being sent (the escalate action), so the confirmation visually
+// backs up the channel named in the copy.
+function ResolveNote({ note, icon }) {
   return (
     <div className="anim-enter" style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--ot-green)' }}>
       <span
@@ -433,14 +437,19 @@ function ResolveNote({ note }) {
           width: 18,
           height: 18,
           borderRadius: '50%',
-          background: 'var(--ot-green-tint)',
+          background: icon === 'teams' ? 'var(--ot-surface)' : 'var(--ot-green-tint)',
+          border: icon === 'teams' ? '1px solid var(--ot-border)' : 'none',
         }}
       >
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="var(--ot-green)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path className="check-draw" d="M4 10.5l4 4 8-8.5" pathLength="1" />
-        </svg>
+        {icon === 'teams' ? (
+          <img src="/icons/microsoft-teams.svg" alt="" width={11} height={11} />
+        ) : (
+          <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="var(--ot-green)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path className="check-draw" d="M4 10.5l4 4 8-8.5" pathLength="1" />
+          </svg>
+        )}
       </span>
-      <span style={{ font: '600 12.5px "Open Sans", sans-serif' }}>{note}</span>
+      <span style={{ font: '600 12.5px "Open Sans", sans-serif', color: 'var(--ot-ink)' }}>{note}</span>
     </div>
   )
 }

@@ -567,7 +567,8 @@
    "title": "Stalled — deadline risk",
    "body": "Warehouse extract open 6 days; deadline in 9. I've reminded Daniel Okafor twice in Teams. Recommend escalating to his manager.",
    "action": "Escalate",
-   "resolveNote": "Escalated to R. Vance (Eng Manager) · Ticket SNOW-88419 updated."
+   "resolveNote": "Escalated to R. Vance (Eng Manager) · Teams message sent.",
+   "resolveIcon": "teams"
   },
   {
    "id": 3,
