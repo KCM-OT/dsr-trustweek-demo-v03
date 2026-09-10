@@ -51,6 +51,7 @@ export function SetupScene() {
   const [responseSent, setResponseSent] = useState(false)
   const [attachedDocuments, setAttachedDocuments] = useState([])
   const [documentsResponseSent, setDocumentsResponseSent] = useState(false)
+  const [profileCardVisible, setProfileCardVisible] = useState(false)
   const setupResponse = 'This looks correct to me, no updates needed'
   const documentsResponse = 'these are the documents that I have so far. '
   const simulatedDocuments = [
@@ -92,7 +93,6 @@ export function SetupScene() {
   // ~800ms typing beat (AgentMessage) — and only once that settles does the
   // profile table appear, instead of both building in at once.
   const showChatContent = beat >= 1 && !entering
-  const [profileCardVisible, setProfileCardVisible] = useState(false)
   useEffect(() => {
     if (!showChatContent) {
       setProfileCardVisible(false)
