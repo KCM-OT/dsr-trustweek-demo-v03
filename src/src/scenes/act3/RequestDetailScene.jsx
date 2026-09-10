@@ -38,19 +38,19 @@ import { getWorkflowByName } from '../../data/workflows'
 // Act 3's agent collaboration (split screen).
 
 const BEATS = [
-  'Request tab, initial state',
-  'Transition to Workflow tab (steps appear)',
+  'Request detail, initial state',
+  'Initial state',
+  'Workflow steps appear (staggered)',
   'Fast-forward — items 1–4 done, item 5 flagged for privacy review',
   'Hand off → split screen',
 ]
 
-const HANDOFF_BEAT = 3
+const HANDOFF_BEAT = 4
 // The workflow's steps are pre-determined by the matched workflow itself
 // (data/workflows.js), not "planned" per request — so this scene has no
-// separate reasoning/plan-explanation beat. The scene opens on the Request
-// tab (beat 0), then transitions to the Workflow tab on beat 1 — its steps
-// appear as part of that same transition — and fast-forward plays out.
-const FAST_FORWARD_BEAT = 2
+// separate reasoning/plan-explanation beat. Fast-forward now lands one
+// beat earlier than before.
+const FAST_FORWARD_BEAT = 3
 
 const PLAN_ICONS = {
   'ID verification': IdBadgeIcon,
@@ -68,27 +68,18 @@ export function RequestDetailScene() {
   const beat = useSceneBeats('request-detail', 'Request detail — Marcus Bell', BEATS, null, () =>
     navigate('/intake', { state: { resume: 'pre-submit' } })
   )
-  const [tab, setTab] = useState('Request')
+  const [tab, setTab] = useState('Workflow')
 
   // Entered with a requested beat (the split screen's back-exit returns
   // here at beat 5, the fast-forward state); number key 3 still lands on 0.
   const location = useLocation()
-  const { sceneId, jumpToBeat } = useCue()
+  const { jumpToBeat } = useCue()
   useEffect(() => {
     if (typeof location.state?.beat === 'number') jumpToBeat(location.state.beat)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Guarded on sceneId, not just beat: on the mount render right after a
-  // cross-scene navigation (e.g. from intake's Confirm → here), `beat`
-  // still holds the PREVIOUS scene's leftover beatIndex from shared cue
-  // context for one render, before useSceneBeats' registration effect
-  // corrects it — so if that leftover value happens to equal HANDOFF_BEAT,
-  // this would fire the handoff navigate before this scene ever renders.
-  // sceneId is stale on that exact same render too, so checking it here
-  // skips the bad pass and only acts once context truly reflects this scene.
   useEffect(() => {
-    if (sceneId !== 'request-detail') return
     if (beat === 0) {
       setTab('Request')
     } else if (beat === 1) {
@@ -96,7 +87,7 @@ export function RequestDetailScene() {
     } else if (beat === HANDOFF_BEAT) {
       navigate('/requests/4207/subtask')
     }
-  }, [beat, sceneId, navigate])
+  }, [beat, navigate])
 
   return (
     <div>
@@ -261,9 +252,13 @@ function Tabs({ tab, onSelect }) {
 function WorkflowTab({ beat }) {
   return (
     <div style={{ maxWidth: 640 }}>
-      <SelectedWorkflowCard />
-      <WorkflowStageChevron beat={beat} />
-      <WorkflowStepsPanel beat={beat} />
+      {beat >= 1 && (
+        <>
+          <SelectedWorkflowCard />
+          <WorkflowStageChevron beat={beat} />
+          <WorkflowStepsPanel beat={beat} />
+        </>
+      )}
     </div>
   )
 }
@@ -320,17 +315,6 @@ function SelectedWorkflowCard() {
   )
 }
 
-// Which stage the request is currently on, 0-indexed into marcus.plan —
-// the first item that isn't Done yet (or the last item, once everything
-// is). Shared by the stage chevron (shows the whole workflow's stages)
-// and the steps panel (shows only the subtasks added so far, stage by
-// stage — see WorkflowStepsPanel).
-function currentStageIndex(beat) {
-  const states = marcus.plan.map((item) => itemState(item, beat).status)
-  const i = states.findIndex((s) => s !== 'Done')
-  return i === -1 ? marcus.plan.length - 1 : i
-}
-
 // Stage bar — occupies the same "where is this request in its process"
 // role as the legacy blue chevron stage bar this scene's skeleton is based
 // on, just driven by the matched workflow's steps (marcus.plan) instead of
@@ -339,7 +323,8 @@ function currentStageIndex(beat) {
 function WorkflowStageChevron({ beat }) {
   const total = marcus.plan.length
   const states = marcus.plan.map((item) => itemState(item, beat).status)
-  const currentIndex = currentStageIndex(beat)
+  let currentIndex = states.findIndex((s) => s !== 'Done')
+  if (currentIndex === -1) currentIndex = total - 1
   const currentItem = marcus.plan[currentIndex]
 
   return (
@@ -404,14 +389,6 @@ function itemState(item, beat) {
 function WorkflowStepsPanel({ beat }) {
   const navigate = useNavigate()
 
-  // Subtasks are tied to the workflow's current stage: only the tasks up
-  // through the stage the request has reached are visible, so at stage 1
-  // just "Verify identity" shows. Fast-forwarding to stage 5 reveals the
-  // stages 2–4 subtasks (Salesforce, Marketo, Zendesk) along with it, as
-  // if they'd been added one by one on the way there.
-  const currentIndex = currentStageIndex(beat)
-  const visiblePlan = marcus.plan.slice(0, currentIndex + 1)
-
   return (
     <div
       style={{
@@ -421,7 +398,7 @@ function WorkflowStepsPanel({ beat }) {
         padding: 'var(--space-2) 0',
       }}
     >
-      {visiblePlan.map((item, i) => {
+      {marcus.plan.map((item, i) => {
         const Icon = PLAN_ICONS[item.system] || DocumentIcon
         const s = itemState(item, beat)
         return (
@@ -434,7 +411,7 @@ function WorkflowStepsPanel({ beat }) {
               alignItems: 'flex-start',
               gap: 'var(--space-3)',
               padding: '14px var(--space-4)',
-              borderBottom: i < visiblePlan.length - 1 ? '1px solid var(--ot-border)' : 'none',
+              borderBottom: i < marcus.plan.length - 1 ? '1px solid var(--ot-border)' : 'none',
             }}
           >
             <span
