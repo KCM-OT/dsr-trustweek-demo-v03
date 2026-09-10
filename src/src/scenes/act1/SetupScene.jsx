@@ -60,30 +60,6 @@ export function SetupScene() {
     }
   }, [beat])
 
-  // Slide 2 interaction: type Amara's confirmation into the compose bar,
-  // then click Send now once the full response is present. The sent reply
-  // becomes part of the thread before beat 2 reveals the next agent prompt.
-  useEffect(() => {
-    if (beat !== 1 || responseSent) return
-    let index = 0
-    let sendTimer
-    const typingTimer = setInterval(() => {
-      index += 1
-      setComposeText(setupResponse.slice(0, index))
-      if (index === setupResponse.length) {
-        clearInterval(typingTimer)
-        sendTimer = setTimeout(() => {
-          setResponseSent(true)
-          setComposeText('')
-        }, 650)
-      }
-    }, 38)
-    return () => {
-      clearInterval(typingTimer)
-      if (sendTimer) clearTimeout(sendTimer)
-    }
-  }, [beat, responseSent])
-
   // A 1s loader pause plays on entry into the conversation (beat 0 → 1,
   // "slide 1 → 2" in the presenter numbering). Keyed off the beat
   // transition itself rather than a fixed beat number, so it replays
@@ -114,6 +90,35 @@ export function SetupScene() {
     const t = setTimeout(() => setProfileCardVisible(true), 800)
     return () => clearTimeout(t)
   }, [showChatContent])
+
+  // Slide 2 interaction: wait until the profile table artifact is visible,
+  // pause for one second, type Amara's confirmation into the compose bar,
+  // then click Send now once the full response is present. The sent reply
+  // becomes part of the thread before beat 2 reveals the next agent prompt.
+  useEffect(() => {
+    if (beat !== 1 || !profileCardVisible || responseSent) return
+    let index = 0
+    let typingTimer
+    let sendTimer
+    const startTypingTimer = setTimeout(() => {
+      typingTimer = setInterval(() => {
+        index += 1
+        setComposeText(setupResponse.slice(0, index))
+        if (index === setupResponse.length) {
+          clearInterval(typingTimer)
+          sendTimer = setTimeout(() => {
+            setResponseSent(true)
+            setComposeText('')
+          }, 650)
+        }
+      }, 38)
+    }, 1000)
+    return () => {
+      clearTimeout(startTypingTimer)
+      if (typingTimer) clearInterval(typingTimer)
+      if (sendTimer) clearTimeout(sendTimer)
+    }
+  }, [beat, profileCardVisible, responseSent])
 
   // CUE 6 choreography — Amara's reply, then the provisioning card, then
   // the three status flips staggered ~500–600ms apart (README #3 pacing).
