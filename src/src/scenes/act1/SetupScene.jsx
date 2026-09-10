@@ -49,7 +49,16 @@ export function SetupScene() {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [composeText, setComposeText] = useState('')
   const [responseSent, setResponseSent] = useState(false)
+  const [attachedDocuments, setAttachedDocuments] = useState([])
+  const [documentsResponseSent, setDocumentsResponseSent] = useState(false)
   const setupResponse = 'This looks correct to me, no updates needed'
+  const documentsResponse = 'these are the documents that I have so far. '
+  const simulatedDocuments = [
+    'DSAR Standard Operating Procedure.pdf',
+    'Customer Data Flows.pdf',
+    'Response Letter Examples.docx',
+    'Meridian Brand + Tone Guide.pdf',
+  ]
 
   useEffect(() => {
     if (beat === 0) {
@@ -57,6 +66,8 @@ export function SetupScene() {
       setPreviewOpen(false)
       setComposeText('')
       setResponseSent(false)
+      setAttachedDocuments([])
+      setDocumentsResponseSent(false)
     }
   }, [beat])
 
@@ -119,6 +130,46 @@ export function SetupScene() {
       if (sendTimer) clearTimeout(sendTimer)
     }
   }, [beat, profileCardVisible, responseSent])
+
+  // Slide 3 interaction: after the document request is visible, pause for
+  // one second, type Amara's response, attach the four documents one at a
+  // time, and press Send now. Beat 3 then reveals the same four-file upload
+  // artifact that the sent chat response introduced.
+  useEffect(() => {
+    if (beat !== 2 || documentsResponseSent) return
+    let index = 0
+    let typingTimer
+    let attachTimer
+    let sendTimer
+    const startTypingTimer = setTimeout(() => {
+      typingTimer = setInterval(() => {
+        index += 1
+        setComposeText(documentsResponse.slice(0, index))
+        if (index === documentsResponse.length) {
+          clearInterval(typingTimer)
+          let attachedCount = 0
+          attachTimer = setInterval(() => {
+            attachedCount += 1
+            setAttachedDocuments(simulatedDocuments.slice(0, attachedCount))
+            if (attachedCount === simulatedDocuments.length) {
+              clearInterval(attachTimer)
+              sendTimer = setTimeout(() => {
+                setDocumentsResponseSent(true)
+                setComposeText('')
+                setAttachedDocuments([])
+              }, 650)
+            }
+          }, 280)
+        }
+      }, 38)
+    }, 1000)
+    return () => {
+      clearTimeout(startTypingTimer)
+      if (typingTimer) clearInterval(typingTimer)
+      if (attachTimer) clearInterval(attachTimer)
+      if (sendTimer) clearTimeout(sendTimer)
+    }
+  }, [beat, documentsResponseSent])
 
   // CUE 6 choreography — Amara's reply, then the provisioning card, then
   // the three status flips staggered ~500–600ms apart (README #3 pacing).
@@ -302,6 +353,7 @@ export function SetupScene() {
                     privacy hire, hand to me.
                   </AgentMessage>
                 )}
+                {documentsResponseSent && <AdminMessage isNew>{documentsResponse}</AdminMessage>}
 
                 {beat >= 3 && <UploadMessage isNew={beat === 3} />}
 
@@ -353,6 +405,7 @@ export function SetupScene() {
             </div>
             <ChatComposeBar
               text={composeText}
+              attachments={attachedDocuments}
               onSend={() => {
                 setResponseSent(true)
                 setComposeText('')
@@ -667,8 +720,9 @@ function Card({ children, style }) {
 // only — nothing typed, nothing sent (same convention as the Act 3 Teams
 // compose bar): the thread is scripted/beat-driven, not a live input.
 
-function ChatComposeBar({ text, onSend }) {
+function ChatComposeBar({ text, attachments, onSend }) {
   const hasText = text.length > 0
+  const hasAttachments = attachments.length > 0
 
   return (
     <div style={{ flexShrink: 0, borderTop: '1px solid #e5e5e5', background: '#ffffff', padding: '14px 24px' }}>
@@ -684,6 +738,29 @@ function ChatComposeBar({ text, onSend }) {
           borderRadius: 6,
         }}
       >
+          {hasAttachments && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }} aria-live="polite">
+              {attachments.map((attachment) => (
+                <span
+                  key={attachment}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    padding: '4px 7px',
+                    border: '1px solid #d9d9d9',
+                    borderRadius: 4,
+                    background: '#ffffff',
+                    color: '#1a1a1a',
+                    font: '400 11px/14px "Open Sans", sans-serif',
+                  }}
+                >
+                  <FileIcon width={13} height={13} />
+                  {attachment}
+                </span>
+              ))}
+            </div>
+          )}
           <p
             aria-live="polite"
             style={{
