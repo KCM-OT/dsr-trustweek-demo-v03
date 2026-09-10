@@ -16,7 +16,14 @@ const JOURNEY_SCENES = [
       'Handoff to flow chart',
     ],
   },
-  { sceneId: 'setup-flow', route: '/setup/flow', act: 'Act 1', sceneLabel: 'Generated flow chart', tone: 'agent', beats: ['Flow chart (interactive)'] },
+  {
+    sceneId: 'setup-flow',
+    route: '/setup/flow',
+    act: 'Act 1',
+    sceneLabel: 'Generated flow chart',
+    tone: 'agent',
+    beats: ['Flow chart (interactive)', 'Agent escalates high-risk requests to Legal'],
+  },
   {
     sceneId: 'setup-workflows',
     route: '/setup/workflows',
@@ -80,7 +87,20 @@ const JOURNEY_SCENES = [
       'Page 9 · What you can do next',
     ],
   },
-  { sceneId: 'dashboard', route: '/dashboard', act: 'Act 4', sceneLabel: 'Program dashboard', tone: 'dashboard', beats: ['Dashboard overview'] },
+  {
+    sceneId: 'dashboard',
+    route: '/dashboard',
+    act: 'Act 4',
+    sceneLabel: 'Program dashboard',
+    tone: 'dashboard',
+    beats: [
+      'Dashboard overview',
+      'Needs your attention',
+      'Compare duplicate request',
+      'Reject duplicate → learn prompt',
+      'Confirm learn and auto-reject',
+    ],
+  },
   { sceneId: 'blank', route: '/blank', act: 'Holding', sceneLabel: 'Holding screen', tone: 'meridian', beats: ['Holding'] },
 ]
 

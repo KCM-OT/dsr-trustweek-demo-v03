@@ -47,28 +47,10 @@ export function SetupScene() {
   // beat so number-key 1 always yields a clean re-run (build spec §0).
   const [austriaRemoved, setAustriaRemoved] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
-  const [composeText, setComposeText] = useState('')
-  const [responseSent, setResponseSent] = useState(false)
-  const [attachedDocuments, setAttachedDocuments] = useState([])
-  const [documentsResponseSent, setDocumentsResponseSent] = useState(false)
-  const [profileCardVisible, setProfileCardVisible] = useState(false)
-  const setupResponse = 'This looks correct to me, no updates needed'
-  const documentsResponse = 'these are the documents that I have so far. '
-  const simulatedDocuments = [
-    'DSAR Standard Operating Procedure.pdf',
-    'Customer Data Flows.pdf',
-    'Response Letter Examples.docx',
-    'Meridian Brand + Tone Guide.pdf',
-  ]
-
   useEffect(() => {
     if (beat === 0) {
       setAustriaRemoved(false)
       setPreviewOpen(false)
-      setComposeText('')
-      setResponseSent(false)
-      setAttachedDocuments([])
-      setDocumentsResponseSent(false)
     }
   }, [beat])
 
@@ -93,6 +75,7 @@ export function SetupScene() {
   // ~800ms typing beat (AgentMessage) — and only once that settles does the
   // profile table appear, instead of both building in at once.
   const showChatContent = beat >= 1 && !entering
+  const [profileCardVisible, setProfileCardVisible] = useState(false)
   useEffect(() => {
     if (!showChatContent) {
       setProfileCardVisible(false)
@@ -101,75 +84,6 @@ export function SetupScene() {
     const t = setTimeout(() => setProfileCardVisible(true), 800)
     return () => clearTimeout(t)
   }, [showChatContent])
-
-  // Slide 2 interaction: wait until the profile table artifact is visible,
-  // pause for one second, type Amara's confirmation into the compose bar,
-  // then click Send now once the full response is present. The sent reply
-  // becomes part of the thread before beat 2 reveals the next agent prompt.
-  useEffect(() => {
-    if (beat !== 1 || !profileCardVisible || responseSent) return
-    let index = 0
-    let typingTimer
-    let sendTimer
-    const startTypingTimer = setTimeout(() => {
-      typingTimer = setInterval(() => {
-        index += 1
-        setComposeText(setupResponse.slice(0, index))
-        if (index === setupResponse.length) {
-          clearInterval(typingTimer)
-          sendTimer = setTimeout(() => {
-            setResponseSent(true)
-            setComposeText('')
-          }, 650)
-        }
-      }, 38)
-    }, 1000)
-    return () => {
-      clearTimeout(startTypingTimer)
-      if (typingTimer) clearInterval(typingTimer)
-      if (sendTimer) clearTimeout(sendTimer)
-    }
-  }, [beat, profileCardVisible, responseSent])
-
-  // Slide 3 interaction: after the document request is visible, pause for
-  // one second, type Amara's response, attach the four documents one at a
-  // time, and press Send now. Beat 3 then reveals the same four-file upload
-  // artifact that the sent chat response introduced.
-  useEffect(() => {
-    if (beat !== 2 || documentsResponseSent) return
-    let index = 0
-    let typingTimer
-    let attachTimer
-    let sendTimer
-    const startTypingTimer = setTimeout(() => {
-      typingTimer = setInterval(() => {
-        index += 1
-        setComposeText(documentsResponse.slice(0, index))
-        if (index === documentsResponse.length) {
-          clearInterval(typingTimer)
-          let attachedCount = 0
-          attachTimer = setInterval(() => {
-            attachedCount += 1
-            setAttachedDocuments(simulatedDocuments.slice(0, attachedCount))
-            if (attachedCount === simulatedDocuments.length) {
-              clearInterval(attachTimer)
-              sendTimer = setTimeout(() => {
-                setDocumentsResponseSent(true)
-                setComposeText('')
-                setAttachedDocuments([])
-              }, 650)
-            }
-          }, 280)
-        }
-      }, 38)
-    }, 1000)
-    return () => {
-      clearTimeout(startTypingTimer)
-      if (typingTimer) clearInterval(typingTimer)
-      if (attachTimer) clearInterval(attachTimer)
-      if (sendTimer) clearTimeout(sendTimer)
-    }
-  }, [beat, documentsResponseSent])
 
   // CUE 6 choreography — Amara's reply, then the provisioning card, then
   // the three status flips staggered ~500–600ms apart (README #3 pacing).
@@ -342,7 +256,6 @@ export function SetupScene() {
                         )}
                       </>
                     )}
-                    {responseSent && <AdminMessage isNew>{setupResponse}</AdminMessage>}
                   </>
                 )}
 
@@ -353,7 +266,6 @@ export function SetupScene() {
                     privacy hire, hand to me.
                   </AgentMessage>
                 )}
-                {documentsResponseSent && <AdminMessage isNew>{documentsResponse}</AdminMessage>}
 
                 {beat >= 3 && <UploadMessage isNew={beat === 3} />}
 
@@ -403,14 +315,7 @@ export function SetupScene() {
                 <div ref={endRef} style={{ height: 1 }} />
               </div>
             </div>
-            <ChatComposeBar
-              text={composeText}
-              attachments={attachedDocuments}
-              onSend={() => {
-                setResponseSent(true)
-                setComposeText('')
-              }}
-            />
+            <ChatComposeBar />
           </div>
 
           <div style={{ paddingTop: 24, paddingRight: 24, paddingBottom: 24 }}>
@@ -720,10 +625,7 @@ function Card({ children, style }) {
 // only — nothing typed, nothing sent (same convention as the Act 3 Teams
 // compose bar): the thread is scripted/beat-driven, not a live input.
 
-function ChatComposeBar({ text, attachments, onSend }) {
-  const hasText = text.length > 0
-  const hasAttachments = attachments.length > 0
-
+function ChatComposeBar() {
   return (
     <div style={{ flexShrink: 0, borderTop: '1px solid #e5e5e5', background: '#ffffff', padding: '14px 24px' }}>
       <div
@@ -738,43 +640,9 @@ function ChatComposeBar({ text, attachments, onSend }) {
           borderRadius: 6,
         }}
       >
-          {hasAttachments && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }} aria-live="polite">
-              {attachments.map((attachment) => (
-                <span
-                  key={attachment}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 5,
-                    padding: '4px 7px',
-                    border: '1px solid #d9d9d9',
-                    borderRadius: 4,
-                    background: '#ffffff',
-                    color: '#1a1a1a',
-                    font: '400 11px/14px "Open Sans", sans-serif',
-                  }}
-                >
-                  <FileIcon width={13} height={13} />
-                  {attachment}
-                </span>
-              ))}
-            </div>
-          )}
-          <p
-            aria-live="polite"
-            style={{
-              margin: 0,
-              color: hasText ? '#1a1a1a' : '#4d4d4d',
-              fontFamily: '"Open Sans", sans-serif',
-              fontSize: 12,
-              fontStyle: hasText ? 'normal' : 'italic',
-              lineHeight: '16px',
-              minHeight: 16,
-            }}
-          >
-            {hasText ? text : 'Message to privacy agent goes here...'}
-          </p>
+        <p style={{ margin: 0, color: '#4d4d4d', fontFamily: '"Open Sans", sans-serif', fontSize: 12, fontStyle: 'italic', lineHeight: '16px' }}>
+          Message to privacy agent goes here...
+        </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button
             type="button"
@@ -791,22 +659,20 @@ function ChatComposeBar({ text, attachments, onSend }) {
             <img src="/figma/attachment-button.svg" alt="" width={15} height={17} />
           </button>
           <span style={{ flex: 1 }} />
-            <button
-              type="button"
-              onClick={onSend}
-              disabled={!hasText}
-              style={{
-                padding: '6px 16px',
-                border: 0,
-                borderRadius: 4,
-                background: hasText ? '#4d4d4d' : '#c8c8c8',
-                color: '#ffffff',
-                font: '600 14px/20px "Open Sans", sans-serif',
-                cursor: hasText ? 'pointer' : 'default',
-              }}
-            >
-              Send now
-            </button>
+          <button
+            type="button"
+            style={{
+              padding: '6px 16px',
+              border: 0,
+              borderRadius: 4,
+              background: '#4d4d4d',
+              color: '#ffffff',
+              font: '600 14px/20px "Open Sans", sans-serif',
+              cursor: 'pointer',
+            }}
+          >
+            Send now
+          </button>
         </div>
       </div>
     </div>

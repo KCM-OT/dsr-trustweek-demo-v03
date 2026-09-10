@@ -219,6 +219,7 @@ export function IntakeScene() {
 
             <AssistantStrip
               beat={beat}
+              requestType={requestType}
               onPivot={() => {
                 setRequestType('See my data')
                 setPivotDone(true)
@@ -341,9 +342,13 @@ function PrimaryButton({ children, onClick }) {
 // The docked assistant affordance — a quiet bordered strip at the bottom of
 // the card, never a floating widget (02 §2). The CUE 2 exchange renders
 // inside it: Marcus's question, then the brand's answer (typing ~800ms)
-// ending in the inline pivot chip.
-function AssistantStrip({ beat, onPivot }) {
-  const exchange = beat >= 2
+// ending in the inline pivot chip. The exchange is specifically about
+// losing loyalty points on deletion, so it only applies while "Delete my
+// data" is the selected request type — once CUE 3 (beat 3) pivots the
+// request to "See my data", the question no longer makes sense and the
+// strip reverts to the idle prompt.
+function AssistantStrip({ beat, requestType, onPivot }) {
+  const exchange = beat >= 2 && requestType === 'Delete my data'
   const [typing, setTyping] = useState(false)
   useEffect(() => {
     if (!exchange) return
