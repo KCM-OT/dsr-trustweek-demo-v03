@@ -47,12 +47,42 @@ export function SetupScene() {
   // beat so number-key 1 always yields a clean re-run (build spec §0).
   const [austriaRemoved, setAustriaRemoved] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [composeText, setComposeText] = useState('')
+  const [responseSent, setResponseSent] = useState(false)
+  const setupResponse = 'This looks correct to me, no updates needed'
+
   useEffect(() => {
     if (beat === 0) {
       setAustriaRemoved(false)
       setPreviewOpen(false)
+      setComposeText('')
+      setResponseSent(false)
     }
   }, [beat])
+
+  // Slide 2 interaction: type Amara's confirmation into the compose bar,
+  // then click Send now once the full response is present. The sent reply
+  // becomes part of the thread before beat 2 reveals the next agent prompt.
+  useEffect(() => {
+    if (beat !== 1 || responseSent) return
+    let index = 0
+    let sendTimer
+    const typingTimer = setInterval(() => {
+      index += 1
+      setComposeText(setupResponse.slice(0, index))
+      if (index === setupResponse.length) {
+        clearInterval(typingTimer)
+        sendTimer = setTimeout(() => {
+          setResponseSent(true)
+          setComposeText('')
+        }, 650)
+      }
+    }, 38)
+    return () => {
+      clearInterval(typingTimer)
+      if (sendTimer) clearTimeout(sendTimer)
+    }
+  }, [beat, responseSent])
 
   // A 1s loader pause plays on entry into the conversation (beat 0 → 1,
   // "slide 1 → 2" in the presenter numbering). Keyed off the beat
@@ -256,6 +286,7 @@ export function SetupScene() {
                         )}
                       </>
                     )}
+                    {responseSent && <AdminMessage isNew>{setupResponse}</AdminMessage>}
                   </>
                 )}
 
@@ -315,7 +346,13 @@ export function SetupScene() {
                 <div ref={endRef} style={{ height: 1 }} />
               </div>
             </div>
-            <ChatComposeBar />
+            <ChatComposeBar
+              text={composeText}
+              onSend={() => {
+                setResponseSent(true)
+                setComposeText('')
+              }}
+            />
           </div>
 
           <div style={{ paddingTop: 24, paddingRight: 24, paddingBottom: 24 }}>
@@ -625,7 +662,9 @@ function Card({ children, style }) {
 // only — nothing typed, nothing sent (same convention as the Act 3 Teams
 // compose bar): the thread is scripted/beat-driven, not a live input.
 
-function ChatComposeBar() {
+function ChatComposeBar({ text, onSend }) {
+  const hasText = text.length > 0
+
   return (
     <div style={{ flexShrink: 0, borderTop: '1px solid #e5e5e5', background: '#ffffff', padding: '14px 24px' }}>
       <div
@@ -640,9 +679,20 @@ function ChatComposeBar() {
           borderRadius: 6,
         }}
       >
-        <p style={{ margin: 0, color: '#4d4d4d', fontFamily: '"Open Sans", sans-serif', fontSize: 12, fontStyle: 'italic', lineHeight: '16px' }}>
-          Message to privacy agent goes here...
-        </p>
+          <p
+            aria-live="polite"
+            style={{
+              margin: 0,
+              color: hasText ? '#1a1a1a' : '#4d4d4d',
+              fontFamily: '"Open Sans", sans-serif',
+              fontSize: 12,
+              fontStyle: hasText ? 'normal' : 'italic',
+              lineHeight: '16px',
+              minHeight: 16,
+            }}
+          >
+            {hasText ? text : 'Message to privacy agent goes here...'}
+          </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button
             type="button"
@@ -659,20 +709,22 @@ function ChatComposeBar() {
             <img src="/figma/attachment-button.svg" alt="" width={15} height={17} />
           </button>
           <span style={{ flex: 1 }} />
-          <button
-            type="button"
-            style={{
-              padding: '6px 16px',
-              border: 0,
-              borderRadius: 4,
-              background: '#4d4d4d',
-              color: '#ffffff',
-              font: '600 14px/20px "Open Sans", sans-serif',
-              cursor: 'pointer',
-            }}
-          >
-            Send now
-          </button>
+            <button
+              type="button"
+              onClick={onSend}
+              disabled={!hasText}
+              style={{
+                padding: '6px 16px',
+                border: 0,
+                borderRadius: 4,
+                background: hasText ? '#4d4d4d' : '#c8c8c8',
+                color: '#ffffff',
+                font: '600 14px/20px "Open Sans", sans-serif',
+                cursor: hasText ? 'pointer' : 'default',
+              }}
+            >
+              Send now
+            </button>
         </div>
       </div>
     </div>
