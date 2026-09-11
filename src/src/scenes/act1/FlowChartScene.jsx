@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSceneBeats } from '../../cue/CueContext'
+import { useCue, useSceneBeats } from '../../cue/CueContext'
 import { AiLoader } from '../../components/AiLoader'
 import { SendIcon } from '../../shell/icons'
 
@@ -228,10 +228,11 @@ const CARDS = [
 ]
 
 // Not part of the Figma frame — this card only exists once the agent chat
-// (below) makes the scripted edit, so it has no dots/connector artwork of
+// (below) makes the scripted edit, so it has no exported connector SVG of
 // its own. It stacks directly under "Privacy sign-off: redactions" (same
-// x, lane still 'access') and is joined to it with a plain drawn line
-// rather than exported connector SVG.
+// x, lane still 'access') and is joined to it with a drawn vertical line
+// plus a matching pair of EdgeDots (bottom of the sign-off card, top of
+// this card), so the link reads the same as the design's real connectors.
 const ESCALATION_CARD = {
   id: 'access-escalate-legal',
   lane: 'access',
@@ -306,17 +307,25 @@ function laneDimmed(focus, lane) {
   return Boolean(focus) && lane !== 'trunk' && lane !== focus
 }
 
+// Beat 0 is the free-roam interactive chart (zoom/pan/hover, plus the chat
+// bubble always available for manual clicks). Beat 1 is the scripted cue
+// step: entering it opens the "ask the agent" panel and fires the same
+// escalation request the chip sends manually, so clicking through the cue
+// deck demonstrates the edit without the presenter having to drive the
+// chat by hand. Advancing past beat 1 continues to the workflows list.
+const BEATS = ['Flow chart (interactive)', 'Agent escalates high-risk requests to Legal']
+
 export function FlowChartScene() {
   const navigate = useNavigate()
-  // Single-beat [CLICK] scene, but never a cue dead-end: advancing continues
-  // to the generated workflows list (/setup/workflows) — the flow chart's
-  // four lanes turned into individual, reviewable workflows; stepping back
+  // Never a cue dead-end: advancing past beat 1 continues to the generated
+  // workflows list (/setup/workflows) — the flow chart's four lanes turned
+  // into individual, reviewable workflows; stepping back from beat 0
   // returns to the setup conversation at its final pre-handoff state (beat
   // 6 — beat 7 would immediately hand off here again).
-  useSceneBeats(
+  const beat = useSceneBeats(
     'setup-flow',
     'Generated flow chart',
-    ['Flow chart (interactive)'],
+    BEATS,
     () => navigate('/setup/workflows'),
     () => navigate('/setup', { state: { beat: 6 } })
   )
@@ -332,8 +341,19 @@ export function FlowChartScene() {
 
   // Scripted chat-driven edit — the agent chat bubble (bottom-right) lets
   // the presenter ask for a change to the generated chart; the one scripted
-  // request adds the ESCALATION_CARD below the sign-off card.
+  // request adds the ESCALATION_CARD below the sign-off card. autoAskCount
+  // increments each time beat 1 is entered via the cue deck, telling
+  // AgentChatWidget to open itself and send the scripted prompt — guarded
+  // on sceneId (not just beat) the same way RequestDetailScene is, since
+  // `beat` still holds the PREVIOUS scene's leftover index for one render
+  // right after a cross-scene navigation into this one.
   const [escalationAdded, setEscalationAdded] = useState(false)
+  const [autoAskCount, setAutoAskCount] = useState(0)
+  const { sceneId } = useCue()
+  useEffect(() => {
+    if (sceneId !== 'setup-flow') return
+    if (beat === 1) setAutoAskCount((n) => n + 1)
+  }, [beat, sceneId])
 
   // The frame is authored at 1950×978 and shown at 70%. On narrower viewports
   // that still overflows, so on mount we drop to the largest step that fits
@@ -547,16 +567,51 @@ export function FlowChartScene() {
 
           {escalationAdded && (
             <>
+              {/* Vertical link from the sign-off card's bottom edge (270 + CARD_H)
+                  down to this card's top edge, centered on both cards' shared x. */}
               <span
                 className="anim-enter"
                 aria-hidden="true"
                 style={{
                   position: 'absolute',
-                  left: ESCALATION_CARD.x + CARD_W / 2 - 1,
-                  top: 333,
-                  width: 2,
-                  height: ESCALATION_CARD.y - 333,
+                  left: ESCALATION_CARD.x + CARD_W / 2 - 2,
+                  top: 270 + CARD_H,
+                  width: 4,
+                  height: ESCALATION_CARD.y - (270 + CARD_H),
                   background: CARD_BORDER,
+                  opacity: laneDimmed(focus, ESCALATION_CARD.lane) ? 0.3 : 1,
+                }}
+              />
+              {/* EdgeDots at each end, matching how every other connector in the
+                  diagram meets its card (white dot, light ring) — sign-off's
+                  bottom edge and this card's top edge. */}
+              <span
+                className="anim-enter"
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  left: ESCALATION_CARD.x + CARD_W / 2 - DOT / 2,
+                  top: 270 + CARD_H - DOT / 2,
+                  width: DOT,
+                  height: DOT,
+                  background: SURFACE,
+                  border: `2px solid ${CARD_BORDER}`,
+                  borderRadius: '50%',
+                  opacity: laneDimmed(focus, ESCALATION_CARD.lane) ? 0.3 : 1,
+                }}
+              />
+              <span
+                className="anim-enter"
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  left: ESCALATION_CARD.x + CARD_W / 2 - DOT / 2,
+                  top: ESCALATION_CARD.y - DOT / 2,
+                  width: DOT,
+                  height: DOT,
+                  background: SURFACE,
+                  border: `2px solid ${CARD_BORDER}`,
+                  borderRadius: '50%',
                   opacity: laneDimmed(focus, ESCALATION_CARD.lane) ? 0.3 : 1,
                 }}
               />
@@ -585,7 +640,11 @@ export function FlowChartScene() {
           onTogglePan={() => setPanTool((v) => !v)}
         />
 
-        <AgentChatWidget escalationAdded={escalationAdded} onEscalate={() => setEscalationAdded(true)} />
+        <AgentChatWidget
+          escalationAdded={escalationAdded}
+          onEscalate={() => setEscalationAdded(true)}
+          autoAskCount={autoAskCount}
+        />
       </div>
     </div>
   )
@@ -795,7 +854,7 @@ const SUGGESTED_PROMPT = 'Escalate flagged high-risk access requests to Legal'
 // reusing the Figma-frame chrome above. Scripted for the demo: any message
 // sent before the escalation exists triggers the one canned edit; anything
 // sent after gets a "already here" reply instead of adding a duplicate.
-function AgentChatWidget({ escalationAdded, onEscalate }) {
+function AgentChatWidget({ escalationAdded, onEscalate, autoAskCount }) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -806,6 +865,17 @@ function AgentChatWidget({ escalationAdded, onEscalate }) {
     const el = listRef.current
     if (el) el.scrollTop = el.scrollHeight
   }, [messages, thinking, open])
+
+  // Cue-driven beat 1 ("Agent escalates high-risk requests to Legal"):
+  // opens the panel and sends the exact scripted prompt, same as the
+  // suggestion chip a presenter would click by hand. Skips 0 so mount
+  // doesn't fire this before the cue ever asks for it.
+  useEffect(() => {
+    if (!autoAskCount) return
+    setOpen(true)
+    send(SUGGESTED_PROMPT)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoAskCount])
 
   function send(text) {
     const value = text.trim()

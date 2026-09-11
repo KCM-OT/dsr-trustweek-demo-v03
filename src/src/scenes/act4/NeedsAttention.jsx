@@ -1,15 +1,35 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { attention } from '../../data/fixtures'
 import { AgentMark } from '../../components/AgentMark'
 
 // Needs-attention list (build spec §4.2) — agent-raised items, visually
-// distinct from the queue (cards, not table rows; each ✦-authored). All 8
-// fixture items render; the two scripted (identity-match compare→approve,
-// and escalate) resolve live and call onResolve so the dashboard's
-// "Awaiting human" stat ticks down — "one live system, not separate
-// screens." Copy verbatim from fixtures §attention / 03_demo_script.md.
+// distinct from the queue (cards, not table rows; each ✦-authored). All 9
+// fixture items render (including a duplicate-request flag, id 9); the two
+// scripted (identity-match compare→approve, and escalate) resolve live and
+// call onResolve so the dashboard's "Awaiting human" stat ticks down —
+// "one live system, not separate screens." Copy verbatim from fixtures
+// §attention / 03_demo_script.md, aside from the added duplicate item.
+//
+// autoCompareId/autoCompareTrigger are set by DashboardScene's cue-driven
+// beat 2 — when autoCompareTrigger increments, the card whose id matches
+// autoCompareId opens its "Compare requests" modal automatically, the same
+// way the card's own button does. autoRejectId/autoRejectTrigger are set by
+// beat 3 — when autoRejectTrigger increments, the matching card (which must
+// already be in 'comparing', from beat 2) clicks "Reject duplicate" for the
+// presenter, surfacing the learn-from-this-decision prompt. autoLearnId/
+// autoLearnTrigger are set by beat 4 — when autoLearnTrigger increments,
+// the matching card (which must already be in 'confirmLearn', from beat 3)
+// clicks "Yes, learn and auto-reject" for the presenter, resolving the card.
 
-export function NeedsAttention({ onResolve }) {
+export function NeedsAttention({
+  onResolve,
+  autoCompareId,
+  autoCompareTrigger,
+  autoRejectId,
+  autoRejectTrigger,
+  autoLearnId,
+  autoLearnTrigger,
+}) {
   return (
     <section id="needs-attention" style={{ marginTop: 'var(--space-8)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--space-4)' }}>
@@ -20,19 +40,59 @@ export function NeedsAttention({ onResolve }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--space-4)', alignItems: 'start' }}>
         {attention.map((item) => (
-          <AttentionCard key={item.id} item={item} onResolve={onResolve} />
+          <AttentionCard
+            key={item.id}
+            item={item}
+            onResolve={onResolve}
+            autoCompareTrigger={item.id === autoCompareId ? autoCompareTrigger : 0}
+            autoRejectTrigger={item.id === autoRejectId ? autoRejectTrigger : 0}
+            autoLearnTrigger={item.id === autoLearnId ? autoLearnTrigger : 0}
+          />
         ))}
       </div>
     </section>
   )
 }
 
-function AttentionCard({ item, onResolve }) {
+function AttentionCard({ item, onResolve, autoCompareTrigger, autoRejectTrigger, autoLearnTrigger }) {
   // 'open' → (identity match) 'reviewing' → 'resolved'; non-scripted items
-  // stay 'open' (their action buttons are inert — only two are scripted).
+  // stay 'open' (their action buttons are inert) EXCEPT kind:'duplicate',
+  // which has its own live path: 'open' → 'comparing' (modal) →
+  // 'confirmLearn' (learn-from-this-decision prompt, reject only) →
+  // 'resolved', with the resolve note depending on which action/choice
+  // was taken along the way.
   const [phase, setPhase] = useState('open')
+  const [resolveNote, setResolveNote] = useState(item.resolveNote)
 
-  function resolve() {
+  // Cue-driven auto-open — skips 0 so mount doesn't fire this before the
+  // cue deck ever asks for it (same guard pattern as the flow chart's
+  // agent-chat auto-ask trigger).
+  useEffect(() => {
+    if (!autoCompareTrigger) return
+    setPhase('comparing')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCompareTrigger])
+
+  // Cue-driven auto-reject — fires the same transition the modal's own
+  // "Reject duplicate" button does, landing on the learn prompt rather
+  // than resolving immediately.
+  useEffect(() => {
+    if (!autoRejectTrigger) return
+    setPhase('confirmLearn')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRejectTrigger])
+
+  // Cue-driven auto-confirm — fires the same transition the learn prompt's
+  // own "Yes, learn and auto-reject" button does, resolving the card with
+  // the learn-aware note.
+  useEffect(() => {
+    if (!autoLearnTrigger) return
+    resolve(item.rejectLearnNote || item.rejectNote)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoLearnTrigger])
+
+  function resolve(note) {
+    if (note) setResolveNote(note)
     setPhase('resolved')
     onResolve(item.id)
   }
@@ -85,21 +145,191 @@ function AttentionCard({ item, onResolve }) {
 
       <div style={{ marginTop: 'var(--space-3)' }}>
         {resolved ? (
-          <ResolveNote note={item.resolveNote} />
+          <ResolveNote note={resolveNote} icon={item.resolveIcon} />
         ) : phase === 'reviewing' ? (
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <PrimaryAction label="Approve match" onClick={resolve} />
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+            <PrimaryAction label="Approve match" onClick={() => resolve()} />
             <QuietAction label="Not a match" />
+            <TeamsAction label="Ask system owner" />
           </div>
         ) : item.scripted ? (
           <PrimaryAction
             label={item.action}
-            onClick={item.compare ? () => setPhase('reviewing') : resolve}
+            onClick={item.compare ? () => setPhase('reviewing') : () => resolve()}
           />
+        ) : item.kind === 'duplicate' && item.duplicate ? (
+          <PrimaryAction label={item.action} onClick={() => setPhase('comparing')} />
         ) : (
           // Non-scripted item — action present for authenticity, inert on stage.
           <QuietAction label={item.action} />
         )}
+      </div>
+
+      {/* duplicate-request comparison (live path, not tied to the rehearsed
+          identity-match/escalate script) — modal, so it reads as a real
+          decision point rather than another inline card. Rejecting doesn't
+          resolve immediately — it hands off to the learn-from-this-decision
+          prompt below. */}
+      {phase === 'comparing' && item.duplicate && (
+        <DuplicateModal
+          request={item.request}
+          duplicate={item.duplicate}
+          onClose={() => setPhase('open')}
+          onReject={() => setPhase('confirmLearn')}
+          onKeep={() => resolve(item.keepNote)}
+        />
+      )}
+
+      {/* Learn-from-this-decision prompt — only reachable after "Reject
+          duplicate," since it's specifically asking permission to teach
+          the agent to auto-reject matching duplicates going forward.
+          Confirm and deny both finalize the rejection; only the resolve
+          note (and whether the agent "learns") differs. */}
+      {phase === 'confirmLearn' && (
+        <LearnPromptModal
+          request={item.request}
+          onDeny={() => resolve(item.rejectNote)}
+          onConfirm={() => resolve(item.rejectLearnNote || item.rejectNote)}
+        />
+      )}
+    </div>
+  )
+}
+
+// Learn-from-this-decision prompt — appears once a duplicate has been
+// rejected, asking whether the agent should remember this pattern (matching
+// name + email + request type) and auto-reject similar duplicates without
+// asking next time. A deliberately small, single-question overlay so it
+// reads as a follow-up decision, not a second comparison.
+function LearnPromptModal({ request, onDeny, onConfirm }) {
+  return (
+    <div
+      role="presentation"
+      onClick={onDeny}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(20, 24, 29, 0.45)',
+        display: 'grid',
+        placeItems: 'center',
+        zIndex: 41,
+        padding: 'var(--space-4)',
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Learn from rejecting ${request} as a duplicate`}
+        onClick={(e) => e.stopPropagation()}
+        className="anim-enter"
+        style={{
+          width: 400,
+          maxWidth: '100%',
+          background: 'var(--ot-surface)',
+          border: '1px solid var(--ot-border)',
+          borderRadius: 'var(--radius-card)',
+          boxShadow: 'var(--shadow-overlay)',
+          padding: 'var(--space-4)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <AgentMark size={13} />
+          <span style={{ font: '600 15px "Open Sans", sans-serif', color: 'var(--ot-ink)' }}>Learn from this decision?</span>
+        </div>
+        <p style={{ font: 'var(--fs-meta)', color: 'var(--ot-ink-2)', marginTop: 8, lineHeight: 1.5 }}>
+          {request} was rejected as a duplicate. Should I automatically reject future requests that match on name,
+          email, and request type the same way — without asking first?
+        </p>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-4)' }}>
+          <PrimaryAction label="Yes, learn and auto-reject" onClick={onConfirm} />
+          <QuietAction label="No, ask me each time" onClick={onDeny} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Duplicate-request comparison modal — side-by-side fields for both
+// requests with matching fields (name/email/type) highlighted the same
+// way CompareCard highlights the identity-match spot-check, plus the two
+// outcomes a reviewer actually has: close this one as the duplicate, or
+// clear the flag and let both proceed independently.
+function DuplicateModal({ request, duplicate, onClose, onReject, onKeep }) {
+  const matchOn = new Set(duplicate.matchOn)
+  const ROWS = [
+    { key: 'request', label: 'Request' },
+    { key: 'name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'type', label: 'Request type' },
+    { key: 'submitted', label: 'Submitted' },
+    { key: 'status', label: 'Status' },
+  ]
+
+  return (
+    <div
+      role="presentation"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(20, 24, 29, 0.45)',
+        display: 'grid',
+        placeItems: 'center',
+        zIndex: 40,
+        padding: 'var(--space-4)',
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Compare duplicate requests for ${request}`}
+        onClick={(e) => e.stopPropagation()}
+        className="anim-enter"
+        style={{
+          width: 560,
+          maxWidth: '100%',
+          background: 'var(--ot-surface)',
+          border: '1px solid var(--ot-border)',
+          borderRadius: 'var(--radius-card)',
+          boxShadow: 'var(--shadow-overlay)',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--ot-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <AgentMark size={13} />
+            <span style={{ font: '600 15px "Open Sans", sans-serif', color: 'var(--ot-ink)' }}>Possible duplicate request</span>
+          </div>
+          <p style={{ font: 'var(--fs-meta)', color: 'var(--ot-ink-2)', marginTop: 4 }}>
+            {duplicate.a.request} matches {duplicate.b.request} on name, email, and request type.
+          </p>
+        </div>
+
+        <div style={{ padding: 'var(--space-4)' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '104px 1fr 1fr',
+              border: '1px solid var(--ot-border)',
+              borderRadius: 'var(--radius-control)',
+              overflow: 'hidden',
+              wordBreak: 'break-word',
+            }}
+          >
+            <Cell head />
+            <Cell head>{duplicate.a.request}</Cell>
+            <Cell head>{duplicate.b.request}</Cell>
+            {ROWS.filter((r) => r.key !== 'request').map((r) => {
+              const match = matchOn.has(r.key)
+              return <FieldRow key={r.key} label={r.label} a={duplicate.a[r.key]} b={duplicate.b[r.key]} match={match} />
+            })}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 'var(--space-2)', padding: 'var(--space-4)', borderTop: '1px solid var(--ot-border)' }}>
+          <DangerAction label="Reject duplicate" onClick={onReject} />
+          <QuietAction label="Remove duplicate flag" onClick={onKeep} />
+        </div>
       </div>
     </div>
   )
@@ -110,7 +340,7 @@ function AttentionCard({ item, onResolve }) {
 // fixtures tag every item severity:"warn").
 function DeadlineChip({ kind }) {
   const urgent = kind === 'stalled'
-  const label = urgent ? 'Deadline risk' : 'Needs review'
+  const label = urgent ? 'Deadline risk' : kind === 'duplicate' ? 'Possible duplicate' : 'Needs review'
   return (
     <span
       style={{
@@ -192,7 +422,11 @@ function Cell({ children, head, label, style }) {
   )
 }
 
-function ResolveNote({ note }) {
+// icon:"teams" swaps the usual green checkmark badge for the Microsoft
+// Teams mark — used when the resolve note itself references a Teams
+// message being sent (the escalate action), so the confirmation visually
+// backs up the channel named in the copy.
+function ResolveNote({ note, icon }) {
   return (
     <div className="anim-enter" style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--ot-green)' }}>
       <span
@@ -203,14 +437,19 @@ function ResolveNote({ note }) {
           width: 18,
           height: 18,
           borderRadius: '50%',
-          background: 'var(--ot-green-tint)',
+          background: icon === 'teams' ? 'var(--ot-surface)' : 'var(--ot-green-tint)',
+          border: icon === 'teams' ? '1px solid var(--ot-border)' : 'none',
         }}
       >
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="var(--ot-green)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path className="check-draw" d="M4 10.5l4 4 8-8.5" pathLength="1" />
-        </svg>
+        {icon === 'teams' ? (
+          <img src="/icons/microsoft-teams.svg" alt="" width={11} height={11} />
+        ) : (
+          <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="var(--ot-green)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path className="check-draw" d="M4 10.5l4 4 8-8.5" pathLength="1" />
+          </svg>
+        )}
       </span>
-      <span style={{ font: '600 12.5px "Open Sans", sans-serif' }}>{note}</span>
+      <span style={{ font: '600 12.5px "Open Sans", sans-serif', color: 'var(--ot-ink)' }}>{note}</span>
     </div>
   )
 }
@@ -234,15 +473,63 @@ function PrimaryAction({ label, onClick }) {
   )
 }
 
-function QuietAction({ label }) {
+function QuietAction({ label, onClick }) {
   return (
     <button
+      onClick={onClick}
       style={{
         padding: '7px 14px',
         borderRadius: 'var(--radius-control)',
         border: '1px solid var(--ot-border)',
         background: 'var(--ot-surface)',
         color: 'var(--ot-ink-2)',
+        font: '600 13px "Open Sans", sans-serif',
+        cursor: 'pointer',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+// Escalation action for the identity-match spot-check — hands the low-
+// confidence match to the Salesforce system owner over Teams rather than
+// resolving it solo. Inert on stage (authenticity only, like the other
+// non-scripted actions): it opens the conversation, it doesn't resolve
+// the card.
+function TeamsAction({ label, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 7,
+        padding: '7px 14px',
+        borderRadius: 'var(--radius-control)',
+        border: '1px solid var(--ot-border)',
+        background: 'var(--ot-surface)',
+        color: 'var(--ot-ink-2)',
+        font: '600 13px "Open Sans", sans-serif',
+        cursor: 'pointer',
+      }}
+    >
+      <img src="/icons/microsoft-teams.svg" alt="" width={15} height={15} style={{ flexShrink: 0 }} />
+      {label}
+    </button>
+  )
+}
+
+function DangerAction({ label, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '7px 14px',
+        borderRadius: 'var(--radius-control)',
+        border: '1px solid var(--ot-danger)',
+        background: 'var(--ot-danger-tint)',
+        color: 'var(--ot-danger)',
         font: '600 13px "Open Sans", sans-serif',
         cursor: 'pointer',
       }}
