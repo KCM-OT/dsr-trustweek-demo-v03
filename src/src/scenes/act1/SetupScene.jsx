@@ -47,10 +47,12 @@ export function SetupScene() {
   // beat so number-key 1 always yields a clean re-run (build spec §0).
   const [austriaRemoved, setAustriaRemoved] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [amaraReply, setAmaraReply] = useState('')
   useEffect(() => {
     if (beat === 0) {
       setAustriaRemoved(false)
       setPreviewOpen(false)
+      setAmaraReply('')
     }
   }, [beat])
 
@@ -248,6 +250,7 @@ export function SetupScene() {
                     {profileCardVisible && (
                       <>
                         <ProfileCard austriaRemoved={austriaRemoved} onRemoveAustria={() => setAustriaRemoved(true)} />
+                        {amaraReply && <AdminMessage isNew>{amaraReply}</AdminMessage>}
                         {austriaRemoved && (
                           <AgentMessage isNew>
                             Got it — removing Austria. That takes Austrian consumer obligations out of scope. Everything
@@ -315,7 +318,11 @@ export function SetupScene() {
                 <div ref={endRef} style={{ height: 1 }} />
               </div>
             </div>
-            <ChatComposeBar />
+            <ChatComposeBar
+              autoReply="This looks correct to me, no updates needed"
+              autoStart={beat === 1 && profileCardVisible && !amaraReply}
+              onSend={setAmaraReply}
+            />
           </div>
 
           <div style={{ paddingTop: 24, paddingRight: 24, paddingBottom: 24 }}>
@@ -625,7 +632,30 @@ function Card({ children, style }) {
 // only — nothing typed, nothing sent (same convention as the Act 3 Teams
 // compose bar): the thread is scripted/beat-driven, not a live input.
 
-function ChatComposeBar() {
+function ChatComposeBar({ autoReply, autoStart, onSend }) {
+  const [draft, setDraft] = useState('')
+  const [sent, setSent] = useState(false)
+
+  useEffect(() => {
+    if (!autoStart || sent) return
+
+    let index = 0
+    const typingTimer = setInterval(() => {
+      index += 1
+      setDraft(autoReply.slice(0, index))
+      if (index >= autoReply.length) {
+        clearInterval(typingTimer)
+        setTimeout(() => {
+          setSent(true)
+          onSend(autoReply)
+          setDraft('')
+        }, 650)
+      }
+    }, 42)
+
+    return () => clearInterval(typingTimer)
+  }, [autoReply, autoStart, onSend, sent])
+
   return (
     <div style={{ flexShrink: 0, borderTop: '1px solid #e5e5e5', background: '#ffffff', padding: '14px 24px' }}>
       <div
@@ -640,9 +670,24 @@ function ChatComposeBar() {
           borderRadius: 6,
         }}
       >
-        <p style={{ margin: 0, color: '#4d4d4d', fontFamily: '"Open Sans", sans-serif', fontSize: 12, fontStyle: 'italic', lineHeight: '16px' }}>
-          Message to privacy agent goes here...
-        </p>
+        <input
+          aria-label="Message to privacy agent"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder="Message to privacy agent goes here..."
+          style={{
+            width: '100%',
+            padding: 0,
+            border: 0,
+            outline: 0,
+            background: 'transparent',
+            color: '#4d4d4d',
+            fontFamily: '"Open Sans", sans-serif',
+            fontSize: 12,
+            fontStyle: draft ? 'normal' : 'italic',
+            lineHeight: '16px',
+          }}
+        />
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button
             type="button"
@@ -661,14 +706,21 @@ function ChatComposeBar() {
           <span style={{ flex: 1 }} />
           <button
             type="button"
+            onClick={() => {
+              if (!draft.trim()) return
+              setSent(true)
+              onSend(draft.trim())
+              setDraft('')
+            }}
+            disabled={!draft.trim()}
             style={{
               padding: '6px 16px',
               border: 0,
               borderRadius: 4,
-              background: '#4d4d4d',
+              background: draft.trim() ? '#4d4d4d' : '#bdbdbd',
               color: '#ffffff',
               font: '600 14px/20px "Open Sans", sans-serif',
-              cursor: 'pointer',
+              cursor: draft.trim() ? 'pointer' : 'default',
             }}
           >
             Send now
