@@ -52,6 +52,9 @@ export function SetupScene() {
   const [documentReplyReady, setDocumentReplyReady] = useState(false)
   const [playbookCardVisible, setPlaybookCardVisible] = useState(false)
   const [playbookReply, setPlaybookReply] = useState('')
+  const [intakeCardsVisible, setIntakeCardsVisible] = useState(false)
+  const [intakeAgentsApproved, setIntakeAgentsApproved] = useState(false)
+  const [showApproveCursor, setShowApproveCursor] = useState(false)
   useEffect(() => {
     if (beat === 0) {
       setAustriaRemoved(false)
@@ -61,6 +64,31 @@ export function SetupScene() {
       setDocumentReplyReady(false)
       setPlaybookCardVisible(false)
       setPlaybookReply('')
+      setIntakeCardsVisible(false)
+      setIntakeAgentsApproved(false)
+      setShowApproveCursor(false)
+    }
+  }, [beat])
+
+  useEffect(() => {
+    if (beat !== 5) {
+      setIntakeCardsVisible(false)
+      setIntakeAgentsApproved(false)
+      setShowApproveCursor(false)
+      return
+    }
+
+    const showCards = setTimeout(() => setIntakeCardsVisible(true), 800)
+    const showCursor = setTimeout(() => setShowApproveCursor(true), 1800)
+    const clickApprove = setTimeout(() => {
+      setShowApproveCursor(false)
+      setIntakeAgentsApproved(true)
+    }, 2100)
+
+    return () => {
+      clearTimeout(showCards)
+      clearTimeout(showCursor)
+      clearTimeout(clickApprove)
     }
   }, [beat])
 
@@ -312,12 +340,18 @@ export function SetupScene() {
 
                 {beat >= 5 && (
                   <>
-                    <AgentMessage isNew={beat === 5}>
-                      Based on your brands and jurisdictions, I suggest four branded intake agents — structured
-                      request experiences that can also answer requesters' questions. One per consumer brand, one for
-                      employees.
-                    </AgentMessage>
-                    <TilesCard onPreview={() => setPreviewOpen(true)} />
+      <AgentMessage isNew={beat === 5}>
+        Based on your brands and jurisdictions, I suggest four branded intake agents — structured
+        request experiences that can also answer requesters' questions. One per consumer brand, one for
+        employees.
+      </AgentMessage>
+      {intakeCardsVisible && (
+        <TilesCard
+          onPreview={() => setPreviewOpen(true)}
+          approved={intakeAgentsApproved}
+          showApproveCursor={showApproveCursor}
+        />
+      )}
                   </>
                 )}
 
@@ -1237,7 +1271,7 @@ const TILES = [
   { name: 'Meridian Employees', color: 'var(--mer-navy)', tint: '#EDF0F3', regs: ['CCPA/CPRA', 'GDPR'] },
 ]
 
-function TilesCard({ onPreview }) {
+function TilesCard({ onPreview, approved, showApproveCursor }) {
   return (
     <Card style={{ padding: 'var(--space-4)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 'var(--space-3)' }}>
@@ -1272,7 +1306,25 @@ function TilesCard({ onPreview }) {
           </button>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--space-4)' }}>
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--space-4)' }}>
+        {showApproveCursor && !approved && (
+          <span
+            aria-hidden="true"
+            className="anim-enter"
+            style={{
+              position: 'absolute',
+              right: 92,
+              bottom: -2,
+              width: 0,
+              height: 0,
+              borderLeft: '7px solid transparent',
+              borderRight: '3px solid transparent',
+              borderTop: '18px solid var(--ot-ink)',
+              transform: 'rotate(-25deg)',
+              zIndex: 1,
+            }}
+          />
+        )}
         <button
           style={{
             padding: '8px 18px',
@@ -1284,7 +1336,7 @@ function TilesCard({ onPreview }) {
             cursor: 'pointer',
           }}
         >
-          Approve all four
+          {approved ? 'Approved' : 'Approve all four'}
         </button>
       </div>
     </Card>
