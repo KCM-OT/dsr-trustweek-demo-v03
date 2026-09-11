@@ -48,12 +48,25 @@ export function SetupScene() {
   const [austriaRemoved, setAustriaRemoved] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [amaraReply, setAmaraReply] = useState('')
+  const [documentReply, setDocumentReply] = useState('')
+  const [documentReplyReady, setDocumentReplyReady] = useState(false)
   useEffect(() => {
     if (beat === 0) {
       setAustriaRemoved(false)
       setPreviewOpen(false)
       setAmaraReply('')
+      setDocumentReply('')
+      setDocumentReplyReady(false)
     }
+  }, [beat])
+
+  useEffect(() => {
+    if (beat !== 2) {
+      setDocumentReplyReady(false)
+      return
+    }
+    const t = setTimeout(() => setDocumentReplyReady(true), 1800)
+    return () => clearTimeout(t)
   }, [beat])
 
   // A 1s loader pause plays on entry into the conversation (beat 0 → 1,
@@ -270,7 +283,7 @@ export function SetupScene() {
                   </AgentMessage>
                 )}
 
-                {beat >= 3 && <UploadMessage isNew={beat === 3} />}
+                {(beat >= 3 || documentReply) && <UploadMessage isNew={Boolean(documentReply) && beat === 2} />}
 
                 {beat >= 4 && (
                   <>
@@ -319,9 +332,10 @@ export function SetupScene() {
               </div>
             </div>
             <ChatComposeBar
-              autoReply="This looks correct to me, no updates needed"
-              autoStart={beat === 1 && profileCardVisible && !amaraReply}
-              onSend={setAmaraReply}
+              key={beat === 2 ? 'document-upload' : 'profile-confirmation'}
+              autoReply={beat === 2 ? 'these are the documents that I have so far.' : 'This looks correct to me, no updates needed'}
+              autoStart={beat === 1 ? profileCardVisible && !amaraReply : beat === 2 && documentReplyReady && !documentReply}
+              onSend={beat === 2 ? setDocumentReply : setAmaraReply}
             />
           </div>
 
@@ -1036,10 +1050,17 @@ function RemovableChip({ label, onRemove }) {
 // --- CUE 3 · Upload moment -----------------------------------------------------
 
 function UploadMessage({ isNew }) {
+  const documents = [
+    'DSAR Standard Operating Procedure.pdf',
+    'Customer Data Flows.pdf',
+    'Response Letter Examples.docx',
+    'Meridian Brand + Tone Guide.pdf',
+  ]
+
   return (
     <div className={isNew ? 'anim-enter' : undefined} style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 var(--space-4)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, maxWidth: 560 }}>
-        {tenant.documents.map((doc, i) => (
+        {documents.map((doc, i) => (
           <span
             key={doc}
             className={isNew ? 'anim-enter' : undefined}
