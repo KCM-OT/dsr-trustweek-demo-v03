@@ -79,11 +79,11 @@ export function SetupScene() {
     }
 
     const showCards = setTimeout(() => setIntakeCardsVisible(true), 800)
-    const showCursor = setTimeout(() => setShowApproveCursor(true), 1800)
+    const showCursor = setTimeout(() => setShowApproveCursor(true), 3800)
     const clickApprove = setTimeout(() => {
       setShowApproveCursor(false)
       setIntakeAgentsApproved(true)
-    }, 2100)
+    }, 4100)
 
     return () => {
       clearTimeout(showCards)
