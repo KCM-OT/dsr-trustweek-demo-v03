@@ -153,12 +153,17 @@ export function SetupScene() {
     return () => clearTimeout(t)
   }, [beat, navigate])
 
-  // Keep the newest content in view as the thread grows.
+  // Keep the newest content in view as the thread grows. Slide 3 uses an
+  // immediate bottom scroll after the upload artifact mounts so all four
+  // attachments remain visible above the fixed composer.
   const endRef = useRef(null)
   useEffect(() => {
-    const t = setTimeout(() => endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 250)
+    const t = setTimeout(
+      () => endRef.current?.scrollIntoView({ behavior: beat === 3 ? 'auto' : 'smooth', block: 'end' }),
+      250,
+    )
     return () => clearTimeout(t)
-  }, [beat, austriaRemoved, provisionStep])
+  }, [beat, austriaRemoved, documentReply, provisionStep])
 
   return (
     <div style={beat >= 1 ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}>
