@@ -50,6 +50,8 @@ export function SetupScene() {
   const [amaraReply, setAmaraReply] = useState('')
   const [documentReply, setDocumentReply] = useState('')
   const [documentReplyReady, setDocumentReplyReady] = useState(false)
+  const [playbookCardVisible, setPlaybookCardVisible] = useState(false)
+  const [playbookReply, setPlaybookReply] = useState('')
   useEffect(() => {
     if (beat === 0) {
       setAustriaRemoved(false)
@@ -57,6 +59,8 @@ export function SetupScene() {
       setAmaraReply('')
       setDocumentReply('')
       setDocumentReplyReady(false)
+      setPlaybookCardVisible(false)
+      setPlaybookReply('')
     }
   }, [beat])
 
@@ -66,6 +70,15 @@ export function SetupScene() {
       return
     }
     const t = setTimeout(() => setDocumentReplyReady(true), 1800)
+    return () => clearTimeout(t)
+  }, [beat])
+
+  useEffect(() => {
+    if (beat !== 4) {
+      setPlaybookCardVisible(false)
+      return
+    }
+    const t = setTimeout(() => setPlaybookCardVisible(true), 800)
     return () => clearTimeout(t)
   }, [beat])
 
@@ -292,7 +305,8 @@ export function SetupScene() {
                       I've read them. Here's your operating playbook as I understand it — this is the context I'll
                       follow on every request.
                     </AgentMessage>
-                    <PlaybookCard />
+                    {playbookCardVisible && <PlaybookCard />}
+                    {playbookReply && <AdminMessage isNew>{playbookReply}</AdminMessage>}
                   </>
                 )}
 
@@ -333,10 +347,23 @@ export function SetupScene() {
               </div>
             </div>
             <ChatComposeBar
-              key={beat === 2 ? 'document-upload' : 'profile-confirmation'}
-              autoReply={beat === 2 ? 'these are the documents that I have so far.' : 'This looks correct to me, no updates needed'}
-              autoStart={beat === 1 ? profileCardVisible && !amaraReply : beat === 2 && documentReplyReady && !documentReply}
-              onSend={beat === 2 ? setDocumentReply : setAmaraReply}
+              key={beat === 2 ? 'document-upload' : beat === 4 ? 'playbook-confirmation' : 'profile-confirmation'}
+              autoReply={
+                beat === 2
+                  ? 'these are the documents that I have so far.'
+                  : beat === 4
+                    ? 'Yes, this looks good. Please use these as the context for every request.'
+                    : 'This looks correct to me, no updates needed'
+              }
+              autoStart={
+                beat === 1
+                  ? profileCardVisible && !amaraReply
+                  : beat === 2
+                    ? documentReplyReady && !documentReply
+                    : beat === 4 && playbookCardVisible && !playbookReply
+              }
+              autoStartDelay={beat === 4 ? 1000 : 0}
+              onSend={beat === 2 ? setDocumentReply : beat === 4 ? setPlaybookReply : setAmaraReply}
             />
           </div>
 
@@ -647,7 +674,7 @@ function Card({ children, style }) {
 // only — nothing typed, nothing sent (same convention as the Act 3 Teams
 // compose bar): the thread is scripted/beat-driven, not a live input.
 
-function ChatComposeBar({ autoReply, autoStart, onSend }) {
+function ChatComposeBar({ autoReply, autoStart, autoStartDelay = 0, onSend }) {
   const [draft, setDraft] = useState('')
   const [sent, setSent] = useState(false)
 
@@ -655,21 +682,28 @@ function ChatComposeBar({ autoReply, autoStart, onSend }) {
     if (!autoStart || sent) return
 
     let index = 0
-    const typingTimer = setInterval(() => {
-      index += 1
-      setDraft(autoReply.slice(0, index))
-      if (index >= autoReply.length) {
-        clearInterval(typingTimer)
-        setTimeout(() => {
-          setSent(true)
-          onSend(autoReply)
-          setDraft('')
-        }, 650)
-      }
-    }, 42)
+    let typingTimer
+    const startTypingTimer = setTimeout(() => {
+      typingTimer = setInterval(() => {
+        index += 1
+        setDraft(autoReply.slice(0, index))
+        if (index >= autoReply.length) {
+          clearInterval(typingTimer)
+          setTimeout(() => {
+            setSent(true)
+            onSend(autoReply)
+            setDraft('')
+          }, 650)
+        }
+      }, 42)
+    }, autoStartDelay)
 
-    return () => clearInterval(typingTimer)
-  }, [autoReply, autoStart, onSend, sent])
+    return () => {
+      clearTimeout(startTypingTimer)
+      if (typingTimer) clearInterval(typingTimer)
+    }
+
+  }, [autoReply, autoStart, autoStartDelay, onSend, sent])
 
   return (
     <div style={{ flexShrink: 0, borderTop: '1px solid #e5e5e5', background: '#ffffff', padding: '14px 24px' }}>
