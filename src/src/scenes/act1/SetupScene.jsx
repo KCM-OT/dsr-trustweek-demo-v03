@@ -53,7 +53,7 @@ export function SetupScene() {
   const [documentsResponseSent, setDocumentsResponseSent] = useState(false)
   const [profileCardVisible, setProfileCardVisible] = useState(false)
   const setupResponse = 'This looks correct to me, no updates needed'
-  const documentsResponse = 'these are the documents that I have so far. '
+  const documentsResponse = 'these are the documents that I have so far.'
   const simulatedDocuments = [
     'DSAR Standard Operating Procedure.pdf',
     'Customer Data Flows.pdf',
@@ -183,12 +183,15 @@ export function SetupScene() {
     return () => clearTimeout(t)
   }, [beat, navigate])
 
-  // Keep the newest content in view as the thread grows.
+  // Keep the newest content in view as the thread grows — including the
+  // intermediate reveals within a beat (profile table landing, replies
+  // being sent), not just the beat index itself, so the presenter never
+  // has to scroll manually mid-beat.
   const endRef = useRef(null)
   useEffect(() => {
     const t = setTimeout(() => endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 250)
     return () => clearTimeout(t)
-  }, [beat, austriaRemoved, provisionStep])
+  }, [beat, austriaRemoved, provisionStep, profileCardVisible, responseSent, documentsResponseSent])
 
   return (
     <div style={beat >= 1 ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}>
