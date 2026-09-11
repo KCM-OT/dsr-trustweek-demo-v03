@@ -283,6 +283,7 @@ export function SetupScene() {
                   </AgentMessage>
                 )}
 
+                {documentReply && <AdminMessage isNew>{documentReply}</AdminMessage>}
                 {(beat >= 3 || documentReply) && <UploadMessage isNew={Boolean(documentReply) && beat === 2} />}
 
                 {beat >= 4 && (
