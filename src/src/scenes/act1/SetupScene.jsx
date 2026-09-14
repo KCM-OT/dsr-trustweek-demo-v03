@@ -102,10 +102,12 @@ export function SetupScene() {
   }, [beat])
 
   useEffect(() => {
-    if (beat !== 4) {
+    if (beat < 4) {
       setPlaybookCardVisible(false)
       return
     }
+    if (beat > 4) return
+
     const t = setTimeout(() => setPlaybookCardVisible(true), 800)
     return () => clearTimeout(t)
   }, [beat])
