@@ -1336,9 +1336,9 @@ function TilesCard({ onPreview, approved, showApproveCursor }) {
           style={{
             padding: '8px 18px',
             borderRadius: 'var(--radius-control)',
-            border: 'none',
-            background: 'var(--ot-green)',
-            color: '#fff',
+            border: approved ? 'none' : '1px solid var(--ot-border)',
+            background: approved ? 'var(--ot-green)' : 'var(--ot-surface)',
+            color: approved ? '#fff' : 'var(--ot-ink)',
             font: '600 13.5px "Open Sans", sans-serif',
             cursor: 'pointer',
           }}
