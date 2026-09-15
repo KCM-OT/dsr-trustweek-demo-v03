@@ -340,7 +340,9 @@ function currentStageIndex(beat) {
 const STAGE_NAMES = ['Verify identity', 'Open', 'Processing', 'Review', 'Exceptions', 'Complete']
 const CHECK_ICON_SRC = '/figma/check-outline.svg'
 
-function StepperNode({ completed }) {
+function StepperNode({ completed, exception }) {
+  const fill = exception ? 'var(--ot-link)' : completed ? '#30a36b' : '#ededed'
+  const borderColor = exception ? 'var(--ot-link)' : completed ? '#30a36b' : '#cbcdd0'
   return (
     <div
       style={{
@@ -351,11 +353,11 @@ function StepperNode({ completed }) {
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 6,
-        background: completed ? '#30a36b' : '#ededed',
-        border: `0.5px solid ${completed ? '#30a36b' : '#cbcdd0'}`,
+        background: fill,
+        border: `0.5px solid ${borderColor}`,
       }}
     >
-      {completed && <img src={CHECK_ICON_SRC} alt="" width="16" height="16" />}
+      {completed && !exception && <img src={CHECK_ICON_SRC} alt="" width="16" height="16" />}
     </div>
   )
 }
@@ -400,7 +402,7 @@ function WorkflowStageChevron({ beat }) {
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 108, height: 28 }}>
                 <StepperDash visible={i > 0} green={completed && prevCompleted} />
-                <StepperNode completed={completed} />
+                <StepperNode completed={completed} exception={label === 'Exceptions' && i === currentIndex} />
                 <StepperDash visible={i < total - 1} green={completed && i < currentIndex} />
               </div>
               <span
