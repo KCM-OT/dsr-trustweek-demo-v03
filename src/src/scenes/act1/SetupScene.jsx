@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { tenant } from '../../data/fixtures'
 import { useCue, useSceneBeats } from '../../cue/CueContext'
 import { StatusPill } from '../../components/StatusPill'
@@ -28,11 +28,8 @@ const BEATS = [
   'CUE 7 · Handoff → flow chart',
 ]
 
-const HANDOFF_BEAT = 7
-
 export function SetupScene() {
   const beat = useSceneBeats('setup', 'Agent Setup', BEATS)
-  const navigate = useNavigate()
   const location = useLocation()
   const { jumpToBeat } = useCue()
 
@@ -47,11 +44,74 @@ export function SetupScene() {
   // beat so number-key 1 always yields a clean re-run (build spec §0).
   const [austriaRemoved, setAustriaRemoved] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [amaraReply, setAmaraReply] = useState('')
+  const [documentReply, setDocumentReply] = useState('')
+  const [documentReplyReady, setDocumentReplyReady] = useState(false)
+  const [playbookCardVisible, setPlaybookCardVisible] = useState(false)
+  const [playbookReply, setPlaybookReply] = useState('')
+  const [intakeCardsVisible, setIntakeCardsVisible] = useState(false)
+  const [intakeAgentsApproved, setIntakeAgentsApproved] = useState(false)
+  const [showApproveCursor, setShowApproveCursor] = useState(false)
   useEffect(() => {
     if (beat === 0) {
       setAustriaRemoved(false)
       setPreviewOpen(false)
+      setAmaraReply('')
+      setDocumentReply('')
+      setDocumentReplyReady(false)
+      setPlaybookCardVisible(false)
+      setPlaybookReply('')
+      setIntakeCardsVisible(false)
+      setIntakeAgentsApproved(false)
+      setShowApproveCursor(false)
     }
+  }, [beat])
+
+  useEffect(() => {
+    if (beat < 5 || beat > 7) {
+      setIntakeCardsVisible(false)
+      setIntakeAgentsApproved(false)
+      setShowApproveCursor(false)
+      return
+    }
+
+    if (beat !== 5) {
+      setShowApproveCursor(false)
+      return
+    }
+
+    const showCards = setTimeout(() => setIntakeCardsVisible(true), 800)
+    const showCursor = setTimeout(() => setShowApproveCursor(true), 3800)
+    const clickApprove = setTimeout(() => {
+      setShowApproveCursor(false)
+      setIntakeAgentsApproved(true)
+    }, 4100)
+
+    return () => {
+      clearTimeout(showCards)
+      clearTimeout(showCursor)
+      clearTimeout(clickApprove)
+    }
+  }, [beat])
+
+  useEffect(() => {
+    if (beat !== 2) {
+      setDocumentReplyReady(false)
+      return
+    }
+    const t = setTimeout(() => setDocumentReplyReady(true), 1800)
+    return () => clearTimeout(t)
+  }, [beat])
+
+  useEffect(() => {
+    if (beat < 4) {
+      setPlaybookCardVisible(false)
+      return
+    }
+    if (beat > 4) return
+
+    const t = setTimeout(() => setPlaybookCardVisible(true), 800)
+    return () => clearTimeout(t)
   }, [beat])
 
   // A 1s loader pause plays on entry into the conversation (beat 0 → 1,
@@ -89,20 +149,20 @@ export function SetupScene() {
   // the three status flips staggered ~500–600ms apart (README #3 pacing).
   const provisionStep = useChoreography(beat === 6, [1400, 1900, 2400, 3000, 3600, 4200])
 
-  // CUE 7 — the closing line lands (typing ~800ms), reads for a moment,
-  // then the scene hands off to the flow chart.
-  useEffect(() => {
-    if (beat !== HANDOFF_BEAT) return
-    const t = setTimeout(() => navigate('/setup/flow'), 2200)
-    return () => clearTimeout(t)
-  }, [beat, navigate])
+  // CUE 7 remains on the conversation so the approved intake-agent artifact
+  // stays visible while the presenter pauses on this beat.
 
-  // Keep the newest content in view as the thread grows.
+  // Keep the newest content in view as the thread grows. Slide 3 uses an
+  // immediate bottom scroll after the upload artifact mounts so all four
+  // attachments remain visible above the fixed composer.
   const endRef = useRef(null)
   useEffect(() => {
-    const t = setTimeout(() => endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 250)
+    const t = setTimeout(
+      () => endRef.current?.scrollIntoView({ behavior: beat === 3 ? 'auto' : 'smooth', block: 'end' }),
+      250,
+    )
     return () => clearTimeout(t)
-  }, [beat, austriaRemoved, provisionStep])
+  }, [beat, austriaRemoved, documentReply, provisionStep])
 
   return (
     <div style={beat >= 1 ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}>
@@ -248,6 +308,7 @@ export function SetupScene() {
                     {profileCardVisible && (
                       <>
                         <ProfileCard austriaRemoved={austriaRemoved} onRemoveAustria={() => setAustriaRemoved(true)} />
+                        {amaraReply && <AdminMessage isNew>{amaraReply}</AdminMessage>}
                         {austriaRemoved && (
                           <AgentMessage isNew>
                             Got it — removing Austria. That takes Austrian consumer obligations out of scope. Everything
@@ -267,7 +328,8 @@ export function SetupScene() {
                   </AgentMessage>
                 )}
 
-                {beat >= 3 && <UploadMessage isNew={beat === 3} />}
+                {documentReply && <AdminMessage isNew>{documentReply}</AdminMessage>}
+                {(beat >= 3 || documentReply) && <UploadMessage isNew={Boolean(documentReply) && beat === 2} />}
 
                 {beat >= 4 && (
                   <>
@@ -275,18 +337,25 @@ export function SetupScene() {
                       I've read them. Here's your operating playbook as I understand it — this is the context I'll
                       follow on every request.
                     </AgentMessage>
-                    <PlaybookCard />
+                    {playbookCardVisible && <PlaybookCard />}
+                    {playbookReply && <AdminMessage isNew>{playbookReply}</AdminMessage>}
                   </>
                 )}
 
                 {beat >= 5 && (
                   <>
-                    <AgentMessage isNew={beat === 5}>
-                      Based on your brands and jurisdictions, I suggest four branded intake agents — structured
-                      request experiences that can also answer requesters' questions. One per consumer brand, one for
-                      employees.
-                    </AgentMessage>
-                    <TilesCard onPreview={() => setPreviewOpen(true)} />
+      <AgentMessage isNew={beat === 5}>
+        Based on your brands and jurisdictions, I suggest four branded intake agents — structured
+        request experiences that can also answer requesters' questions. One per consumer brand, one for
+        employees.
+      </AgentMessage>
+      {intakeCardsVisible && (
+        <TilesCard
+          onPreview={() => setPreviewOpen(true)}
+          approved={intakeAgentsApproved}
+          showApproveCursor={showApproveCursor}
+        />
+      )}
                   </>
                 )}
 
@@ -315,7 +384,25 @@ export function SetupScene() {
                 <div ref={endRef} style={{ height: 1 }} />
               </div>
             </div>
-            <ChatComposeBar />
+            <ChatComposeBar
+              key={beat === 2 ? 'document-upload' : beat === 4 ? 'playbook-confirmation' : 'profile-confirmation'}
+              autoReply={
+                beat === 2
+                  ? 'these are the documents that I have so far.'
+                  : beat === 4
+                    ? 'Yes, this looks good. Please use these as the context for every request.'
+                    : 'This looks correct to me, no updates needed'
+              }
+              autoStart={
+                beat === 1
+                  ? profileCardVisible && !amaraReply
+                  : beat === 2
+                    ? documentReplyReady && !documentReply
+                    : beat === 4 && playbookCardVisible && !playbookReply
+              }
+              autoStartDelay={beat === 4 ? 1000 : 0}
+              onSend={beat === 2 ? setDocumentReply : beat === 4 ? setPlaybookReply : setAmaraReply}
+            />
           </div>
 
           <div style={{ paddingTop: 24, paddingRight: 24, paddingBottom: 24 }}>
@@ -625,7 +712,37 @@ function Card({ children, style }) {
 // only — nothing typed, nothing sent (same convention as the Act 3 Teams
 // compose bar): the thread is scripted/beat-driven, not a live input.
 
-function ChatComposeBar() {
+function ChatComposeBar({ autoReply, autoStart, autoStartDelay = 0, onSend }) {
+  const [draft, setDraft] = useState('')
+  const [sent, setSent] = useState(false)
+
+  useEffect(() => {
+    if (!autoStart || sent) return
+
+    let index = 0
+    let typingTimer
+    const startTypingTimer = setTimeout(() => {
+      typingTimer = setInterval(() => {
+        index += 1
+        setDraft(autoReply.slice(0, index))
+        if (index >= autoReply.length) {
+          clearInterval(typingTimer)
+          setTimeout(() => {
+            setSent(true)
+            onSend(autoReply)
+            setDraft('')
+          }, 650)
+        }
+      }, 42)
+    }, autoStartDelay)
+
+    return () => {
+      clearTimeout(startTypingTimer)
+      if (typingTimer) clearInterval(typingTimer)
+    }
+
+  }, [autoReply, autoStart, autoStartDelay, onSend, sent])
+
   return (
     <div style={{ flexShrink: 0, borderTop: '1px solid #e5e5e5', background: '#ffffff', padding: '14px 24px' }}>
       <div
@@ -640,9 +757,24 @@ function ChatComposeBar() {
           borderRadius: 6,
         }}
       >
-        <p style={{ margin: 0, color: '#4d4d4d', fontFamily: '"Open Sans", sans-serif', fontSize: 12, fontStyle: 'italic', lineHeight: '16px' }}>
-          Message to privacy agent goes here...
-        </p>
+        <input
+          aria-label="Message to privacy agent"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder="Message to privacy agent goes here..."
+          style={{
+            width: '100%',
+            padding: 0,
+            border: 0,
+            outline: 0,
+            background: 'transparent',
+            color: '#4d4d4d',
+            fontFamily: '"Open Sans", sans-serif',
+            fontSize: 12,
+            fontStyle: draft ? 'normal' : 'italic',
+            lineHeight: '16px',
+          }}
+        />
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <button
             type="button"
@@ -661,14 +793,21 @@ function ChatComposeBar() {
           <span style={{ flex: 1 }} />
           <button
             type="button"
+            onClick={() => {
+              if (!draft.trim()) return
+              setSent(true)
+              onSend(draft.trim())
+              setDraft('')
+            }}
+            disabled={!draft.trim()}
             style={{
               padding: '6px 16px',
               border: 0,
               borderRadius: 4,
-              background: '#4d4d4d',
+              background: draft.trim() ? '#4d4d4d' : '#bdbdbd',
               color: '#ffffff',
               font: '600 14px/20px "Open Sans", sans-serif',
-              cursor: 'pointer',
+              cursor: draft.trim() ? 'pointer' : 'default',
             }}
           >
             Send now
@@ -984,10 +1123,17 @@ function RemovableChip({ label, onRemove }) {
 // --- CUE 3 · Upload moment -----------------------------------------------------
 
 function UploadMessage({ isNew }) {
+  const documents = [
+    'DSAR Standard Operating Procedure.pdf',
+    'Customer Data Flows.pdf',
+    'Response Letter Examples.docx',
+    'Meridian Brand + Tone Guide.pdf',
+  ]
+
   return (
     <div className={isNew ? 'anim-enter' : undefined} style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 var(--space-4)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, maxWidth: 560 }}>
-        {tenant.documents.map((doc, i) => (
+        {documents.map((doc, i) => (
           <span
             key={doc}
             className={isNew ? 'anim-enter' : undefined}
@@ -1129,7 +1275,7 @@ const TILES = [
   { name: 'Meridian Employees', color: 'var(--mer-navy)', tint: '#EDF0F3', regs: ['CCPA/CPRA', 'GDPR'] },
 ]
 
-function TilesCard({ onPreview }) {
+function TilesCard({ onPreview, approved, showApproveCursor }) {
   return (
     <Card style={{ padding: 'var(--space-4)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 'var(--space-3)' }}>
@@ -1164,19 +1310,37 @@ function TilesCard({ onPreview }) {
           </button>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--space-4)' }}>
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--space-4)' }}>
+        {showApproveCursor && !approved && (
+          <span
+            aria-hidden="true"
+            className="anim-enter"
+            style={{
+              position: 'absolute',
+              right: 92,
+              bottom: -2,
+              width: 0,
+              height: 0,
+              borderLeft: '7px solid transparent',
+              borderRight: '3px solid transparent',
+              borderTop: '18px solid var(--ot-ink)',
+              transform: 'rotate(-25deg)',
+              zIndex: 1,
+            }}
+          />
+        )}
         <button
           style={{
             padding: '8px 18px',
             borderRadius: 'var(--radius-control)',
-            border: 'none',
-            background: 'var(--ot-green)',
-            color: '#fff',
+            border: approved ? 'none' : '1px solid var(--ot-border)',
+            background: approved ? 'var(--ot-green)' : 'var(--ot-surface)',
+            color: approved ? '#fff' : 'var(--ot-ink)',
             font: '600 13.5px "Open Sans", sans-serif',
             cursor: 'pointer',
           }}
         >
-          Approve all four
+          {approved ? 'Approved' : 'Approve all four'}
         </button>
       </div>
     </Card>
