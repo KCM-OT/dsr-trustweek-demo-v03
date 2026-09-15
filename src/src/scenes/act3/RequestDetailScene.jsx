@@ -331,58 +331,95 @@ function currentStageIndex(beat) {
   return i === -1 ? marcus.plan.length - 1 : i
 }
 
-// Fixed 6-stage lifecycle labels shown on the chevron itself — the
-// program-level stage names (Verify identity → ... → Complete), distinct
-// from marcus.plan's per-task titles (e.g. "Retrieve customer records"),
-// which stay in the "Step X of Y · <task>" caption below the bar.
+// The progress tracker is the supplied Figma "KM Stepper" (node 344:12775),
+// reproduced at its exact spec: six fixed 108px steppers laid out in a
+// 648px row, each a 40px dash / 28px node / 40px dash. Completed nodes are
+// green (#30a36b) with the check-outline asset; pending nodes are #ededed
+// with a #cbcdd0 hairline. Labels are Antique Legacy Medium 13px. Do not
+// alter these dimensions or the font — they come straight from the design.
 const STAGE_NAMES = ['Verify identity', 'Open', 'Processing', 'Review', 'Exceptions', 'Complete']
+const CHECK_ICON_SRC = '/figma/check-outline.svg'
 
-// Stage bar — occupies the same "where is this request in its process"
-// role as the legacy blue chevron stage bar this scene's skeleton is based
-// on, just driven by the matched workflow's steps (marcus.plan) instead of
-// a fixed New/In Progress/Closed lifecycle: one chevron per step, done
-// steps green, the current step blue, everything ahead outlined gray.
+function StepperNode({ completed, exception }) {
+  const fill = exception ? 'var(--ot-link)' : completed ? '#30a36b' : '#ededed'
+  const borderColor = exception ? 'var(--ot-link)' : completed ? '#30a36b' : '#cbcdd0'
+  return (
+    <div
+      style={{
+        width: 28,
+        height: 28,
+        flex: '0 0 28px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 6,
+        background: fill,
+        border: `0.5px solid ${borderColor}`,
+      }}
+    >
+      {completed && !exception && <img src={CHECK_ICON_SRC} alt="" width="16" height="16" />}
+    </div>
+  )
+}
+
+function StepperDash({ visible, green }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        width: 40,
+        height: 2,
+        flex: '0 0 40px',
+        background: green ? '#30a36b' : '#cbcdd0',
+        opacity: visible ? 1 : 0,
+      }}
+    />
+  )
+}
+
 function WorkflowStageChevron({ beat }) {
-  const total = marcus.plan.length
-  const states = marcus.plan.map((item) => itemState(item, beat).status)
+  const total = STAGE_NAMES.length
   const currentIndex = currentStageIndex(beat)
   const currentItem = marcus.plan[currentIndex]
 
   return (
     <div className="anim-enter" style={{ marginBottom: 'var(--space-4)' }}>
-      <div style={{ display: 'flex', gap: 3, height: 40 }}>
-        {marcus.plan.map((item, i) => {
-          const done = states[i] === 'Done'
-          const current = i === currentIndex
-          const clipPath =
-            total === 1
-              ? undefined
-              : i === 0
-                ? 'polygon(0 0, 85% 0, 100% 50%, 85% 100%, 0 100%)'
-                : i === total - 1
-                  ? 'polygon(15% 0, 100% 0, 100% 100%, 15% 100%, 0 50%)'
-                  : 'polygon(15% 0, 85% 0, 100% 50%, 85% 100%, 15% 100%, 0 50%)'
+      <div style={{ display: 'flex', alignItems: 'flex-start', width: 648, height: 52 }}>
+        {STAGE_NAMES.map((label, i) => {
+          const completed = i <= currentIndex
+          const prevCompleted = i - 1 <= currentIndex && i - 1 >= 0
           return (
             <div
-              key={item.id}
-              title={item.title}
+              key={label}
               style={{
-                flex: 1,
-                minWidth: 0,
+                width: 108,
+                flex: '0 0 108px',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                padding: '0 4px',
-                clipPath,
-                background: done ? 'var(--ot-green)' : current ? 'var(--ot-link)' : 'var(--ot-bg)',
-                border: done || current ? 'none' : '1px solid var(--ot-border)',
-                color: done || current ? '#fff' : 'var(--ot-ink-3)',
-                font: '600 11px "Open Sans", sans-serif',
-                lineHeight: 1.2,
+                gap: 8,
               }}
             >
-              {STAGE_NAMES[i] ?? i + 1}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 108, height: 28 }}>
+                <StepperDash visible={i > 0} green={completed && prevCompleted} />
+                <StepperNode completed={completed} exception={label === 'Exceptions' && i === currentIndex} />
+                <StepperDash visible={i < total - 1} green={completed && i < currentIndex} />
+              </div>
+              <span
+                style={{
+                  width: 108,
+                  height: 16,
+                  color: completed ? '#080916' : '#cccccc',
+                  fontFamily: 'inherit',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  lineHeight: '15.6px',
+                  textAlign: 'center',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </span>
             </div>
           )
         })}
