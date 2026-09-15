@@ -71,9 +71,14 @@ export function SetupScene() {
   }, [beat])
 
   useEffect(() => {
-    if (beat !== 5) {
+    if (beat < 5 || beat > 7) {
       setIntakeCardsVisible(false)
       setIntakeAgentsApproved(false)
+      setShowApproveCursor(false)
+      return
+    }
+
+    if (beat !== 5) {
       setShowApproveCursor(false)
       return
     }
