@@ -331,58 +331,48 @@ function currentStageIndex(beat) {
   return i === -1 ? marcus.plan.length - 1 : i
 }
 
-// Fixed 6-stage lifecycle labels shown on the chevron itself — the
-// program-level stage names (Verify identity → ... → Complete), distinct
-// from marcus.plan's per-task titles (e.g. "Retrieve customer records"),
-// which stay in the "Step X of Y · <task>" caption below the bar.
+// The progress tracker follows the supplied Figma KM Stepper: six fixed
+// lifecycle stages with completed nodes in green and pending nodes in gray.
 const STAGE_NAMES = ['Verify identity', 'Open', 'Processing', 'Review', 'Exceptions', 'Complete']
+const CHECK_ICON_URL = 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/figma-assets/dbba7634ec58898162a3d910ed39bb59c81eb09f7576290654afab0f2e28f810.svg'
 
-// Stage bar — occupies the same "where is this request in its process"
-// role as the legacy blue chevron stage bar this scene's skeleton is based
-// on, just driven by the matched workflow's steps (marcus.plan) instead of
-// a fixed New/In Progress/Closed lifecycle: one chevron per step, done
-// steps green, the current step blue, everything ahead outlined gray.
 function WorkflowStageChevron({ beat }) {
-  const total = marcus.plan.length
-  const states = marcus.plan.map((item) => itemState(item, beat).status)
+  const total = STAGE_NAMES.length
   const currentIndex = currentStageIndex(beat)
   const currentItem = marcus.plan[currentIndex]
 
   return (
-    <div className="anim-enter" style={{ marginBottom: 'var(--space-4)' }}>
-      <div style={{ display: 'flex', gap: 3, height: 40 }}>
-        {marcus.plan.map((item, i) => {
-          const done = states[i] === 'Done'
-          const current = i === currentIndex
-          const clipPath =
-            total === 1
-              ? undefined
-              : i === 0
-                ? 'polygon(0 0, 85% 0, 100% 50%, 85% 100%, 0 100%)'
-                : i === total - 1
-                  ? 'polygon(15% 0, 100% 0, 100% 100%, 15% 100%, 0 50%)'
-                  : 'polygon(15% 0, 85% 0, 100% 50%, 85% 100%, 15% 100%, 0 50%)'
+    <div className="anim-enter" style={{ width: '100%', maxWidth: 648, marginBottom: 'var(--space-4)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', width: '100%', height: 52 }}>
+        {STAGE_NAMES.map((label, i) => {
+          const completed = i <= currentIndex
           return (
-            <div
-              key={item.id}
-              title={item.title}
-              style={{
-                flex: 1,
-                minWidth: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                padding: '0 4px',
-                clipPath,
-                background: done ? 'var(--ot-green)' : current ? 'var(--ot-link)' : 'var(--ot-bg)',
-                border: done || current ? 'none' : '1px solid var(--ot-border)',
-                color: done || current ? '#fff' : 'var(--ot-ink-3)',
-                font: '600 11px "Open Sans", sans-serif',
-                lineHeight: 1.2,
-              }}
-            >
-              {STAGE_NAMES[i] ?? i + 1}
+            <div key={label} style={{ display: 'flex', alignItems: 'flex-start', flex: '1 1 0', minWidth: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: 28 }}>
+                  {i > 0 && <span aria-hidden="true" style={{ flex: 1, height: 2, background: completed ? '#30a36b' : '#cbcdd0' }} />}
+                  <span
+                    aria-label={`${label}${completed ? ' complete' : ' pending'}`}
+                    style={{
+                      flex: '0 0 28px',
+                      width: 28,
+                      height: 28,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 6,
+                      background: completed ? '#30a36b' : '#ededed',
+                      border: `0.5px solid ${completed ? '#30a36b' : '#cbcdd0'}`,
+                    }}
+                  >
+                    {completed && <img src={CHECK_ICON_URL} alt="" width="16" height="16" />}
+                  </span>
+                  {i < total - 1 && <span aria-hidden="true" style={{ flex: 1, height: 2, background: i < currentIndex ? '#30a36b' : '#cbcdd0' }} />}
+                </div>
+                <span style={{ width: '100%', color: completed ? '#080916' : '#cccccc', font: '500 13px/15.6px "Antique Legacy", Georgia, serif', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                  {label}
+                </span>
+              </div>
             </div>
           )
         })}
