@@ -396,7 +396,7 @@ export function FlowChartScene() {
     if (entering) return undefined
     setAnimationStage(0)
     const timers = Array.from({ length: 8 }, (_, index) =>
-      setTimeout(() => setAnimationStage(index), index * 650),
+      setTimeout(() => setAnimationStage(index), index * 325),
     )
     return () => timers.forEach(clearTimeout)
   }, [entering])
