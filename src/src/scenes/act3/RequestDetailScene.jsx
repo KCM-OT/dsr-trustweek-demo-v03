@@ -331,10 +331,49 @@ function currentStageIndex(beat) {
   return i === -1 ? marcus.plan.length - 1 : i
 }
 
-// The progress tracker follows the supplied Figma KM Stepper: six fixed
-// lifecycle stages with completed nodes in green and pending nodes in gray.
+// The progress tracker is the supplied Figma "KM Stepper" (node 344:12775),
+// reproduced at its exact spec: six fixed 108px steppers laid out in a
+// 648px row, each a 40px dash / 28px node / 40px dash. Completed nodes are
+// green (#30a36b) with the check-outline asset; pending nodes are #ededed
+// with a #cbcdd0 hairline. Labels are Antique Legacy Medium 13px. Do not
+// alter these dimensions or the font — they come straight from the design.
 const STAGE_NAMES = ['Verify identity', 'Open', 'Processing', 'Review', 'Exceptions', 'Complete']
-const CHECK_ICON_URL = 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/figma-assets/dbba7634ec58898162a3d910ed39bb59c81eb09f7576290654afab0f2e28f810.svg'
+const CHECK_ICON_SRC = '/figma/check-outline.svg'
+
+function StepperNode({ completed }) {
+  return (
+    <div
+      style={{
+        width: 28,
+        height: 28,
+        flex: '0 0 28px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 6,
+        background: completed ? '#30a36b' : '#ededed',
+        border: `0.5px solid ${completed ? '#30a36b' : '#cbcdd0'}`,
+      }}
+    >
+      {completed && <img src={CHECK_ICON_SRC} alt="" width="16" height="16" />}
+    </div>
+  )
+}
+
+function StepperDash({ visible, green }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        width: 40,
+        height: 2,
+        flex: '0 0 40px',
+        background: green ? '#30a36b' : '#cbcdd0',
+        opacity: visible ? 1 : 0,
+      }}
+    />
+  )
+}
 
 function WorkflowStageChevron({ beat }) {
   const total = STAGE_NAMES.length
@@ -342,37 +381,40 @@ function WorkflowStageChevron({ beat }) {
   const currentItem = marcus.plan[currentIndex]
 
   return (
-    <div className="anim-enter" style={{ width: '100%', maxWidth: 648, marginBottom: 'var(--space-4)' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', width: '100%', height: 52 }}>
+    <div className="anim-enter" style={{ marginBottom: 'var(--space-4)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', width: 648, height: 52 }}>
         {STAGE_NAMES.map((label, i) => {
           const completed = i <= currentIndex
+          const prevCompleted = i - 1 <= currentIndex && i - 1 >= 0
           return (
-            <div key={label} style={{ display: 'flex', alignItems: 'flex-start', flex: '1 1 0', minWidth: 0 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: 28 }}>
-                  {i > 0 && <span aria-hidden="true" style={{ flex: 1, height: 2, background: completed ? '#30a36b' : '#cbcdd0' }} />}
-                  <span
-                    aria-label={`${label}${completed ? ' complete' : ' pending'}`}
-                    style={{
-                      flex: '0 0 28px',
-                      width: 28,
-                      height: 28,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: 6,
-                      background: completed ? '#30a36b' : '#ededed',
-                      border: `0.5px solid ${completed ? '#30a36b' : '#cbcdd0'}`,
-                    }}
-                  >
-                    {completed && <img src={CHECK_ICON_URL} alt="" width="16" height="16" />}
-                  </span>
-                  {i < total - 1 && <span aria-hidden="true" style={{ flex: 1, height: 2, background: i < currentIndex ? '#30a36b' : '#cbcdd0' }} />}
-                </div>
-                <span style={{ width: '100%', color: completed ? '#080916' : '#cccccc', font: '500 13px/15.6px "Antique Legacy", Georgia, serif', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                  {label}
-                </span>
+            <div
+              key={label}
+              style={{
+                width: 108,
+                flex: '0 0 108px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 108, height: 28 }}>
+                <StepperDash visible={i > 0} green={completed && prevCompleted} />
+                <StepperNode completed={completed} />
+                <StepperDash visible={i < total - 1} green={completed && i < currentIndex} />
               </div>
+              <span
+                style={{
+                  width: 108,
+                  height: 16,
+                  color: completed ? '#080916' : '#cccccc',
+                  font: '500 13px/15.6px "Antique Legacy", Georgia, serif',
+                  textAlign: 'center',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </span>
             </div>
           )
         })}
