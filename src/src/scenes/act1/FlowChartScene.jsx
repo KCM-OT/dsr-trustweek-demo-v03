@@ -729,7 +729,9 @@ function FlowCard({ card, dimmed, revealOpacity = 1, active, onHover, className 
         border: `1px solid ${CARD_BORDER}`,
         borderRadius: 7,
         opacity: dimmed ? 0.3 : revealOpacity,
-        transition: 'opacity 200ms var(--motion-ease, ease), box-shadow 150ms var(--motion-ease, ease)',
+        transform: revealOpacity > 0 ? 'scale(1)' : 'scale(0.92)',
+        transformOrigin: 'center center',
+        transition: 'opacity 200ms var(--motion-ease, ease), transform 325ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 150ms var(--motion-ease, ease)',
         boxShadow: active && !dimmed ? '0 4px 12px rgba(26,26,26,0.14)' : 'none',
         zIndex: active ? 6 : 4,
       }}
