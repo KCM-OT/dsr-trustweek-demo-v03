@@ -408,7 +408,10 @@ function WorkflowStageChevron({ beat }) {
                   width: 108,
                   height: 16,
                   color: completed ? '#080916' : '#cccccc',
-                  font: '500 13px/15.6px "Antique Legacy", Georgia, serif',
+                  fontFamily: 'inherit',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  lineHeight: '15.6px',
                   textAlign: 'center',
                   whiteSpace: 'nowrap',
                 }}
