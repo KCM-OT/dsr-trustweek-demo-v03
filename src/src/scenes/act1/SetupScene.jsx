@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { tenant } from '../../data/fixtures'
 import { useCue, useSceneBeats } from '../../cue/CueContext'
 import { StatusPill } from '../../components/StatusPill'
@@ -28,11 +28,8 @@ const BEATS = [
   'CUE 7 · Handoff → flow chart',
 ]
 
-const HANDOFF_BEAT = 7
-
 export function SetupScene() {
   const beat = useSceneBeats('setup', 'Agent Setup', BEATS)
-  const navigate = useNavigate()
   const location = useLocation()
   const { jumpToBeat } = useCue()
 
@@ -152,13 +149,8 @@ export function SetupScene() {
   // the three status flips staggered ~500–600ms apart (README #3 pacing).
   const provisionStep = useChoreography(beat === 6, [1400, 1900, 2400, 3000, 3600, 4200])
 
-  // CUE 7 — the closing line lands (typing ~800ms), reads for a moment,
-  // then the scene hands off to the flow chart.
-  useEffect(() => {
-    if (beat !== HANDOFF_BEAT) return
-    const t = setTimeout(() => navigate('/setup/flow'), 2200)
-    return () => clearTimeout(t)
-  }, [beat, navigate])
+  // CUE 7 remains on the conversation so the approved intake-agent artifact
+  // stays visible while the presenter pauses on this beat.
 
   // Keep the newest content in view as the thread grows. Slide 3 uses an
   // immediate bottom scroll after the upload artifact mounts so all four
