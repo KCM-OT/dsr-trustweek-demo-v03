@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { tenant } from '../../data/fixtures'
 import { useCue, useSceneBeats } from '../../cue/CueContext'
 import { StatusPill } from '../../components/StatusPill'
@@ -29,9 +29,22 @@ const BEATS = [
 ]
 
 export function SetupScene() {
-  const beat = useSceneBeats('setup', 'Agent Setup', BEATS)
+  const navigate = useNavigate()
+  const finalMessageFinishedRef = useRef(false)
+  const beat = useSceneBeats('setup', 'Agent Setup', BEATS, () => {
+    if (finalMessageFinishedRef.current) navigate('/setup/flow')
+  })
   const location = useLocation()
   const { jumpToBeat } = useCue()
+
+  useEffect(() => {
+    finalMessageFinishedRef.current = false
+    if (beat !== 7) return
+    const t = setTimeout(() => {
+      finalMessageFinishedRef.current = true
+    }, 800)
+    return () => clearTimeout(t)
+  }, [beat])
 
   // Entered with a requested beat (the flow chart's back-exit returns here
   // at beat 6) — jump after registration; number-key 1 still lands on 0.
