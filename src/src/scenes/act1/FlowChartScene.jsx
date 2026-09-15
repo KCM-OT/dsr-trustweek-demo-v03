@@ -383,10 +383,42 @@ export function FlowChartScene() {
   // 1s scripted pause, slide 8 → 9 (build spec: a loader beat between the
   // setup conversation's handoff line and the generated chart appearing).
   const [entering, setEntering] = useState(true)
+  const [animationStage, setAnimationStage] = useState(-1)
   useEffect(() => {
     const t = setTimeout(() => setEntering(false), 1000)
     return () => clearTimeout(t)
   }, [])
+
+  // Build the workflow in reading order: trunk first, then each request lane.
+  // The staged reveal starts after the handoff loader has finished.
+  useEffect(() => {
+    if (entering) return undefined
+    setAnimationStage(0)
+    const timers = Array.from({ length: 9 }, (_, index) =>
+      setTimeout(() => setAnimationStage(index), index * 650),
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [entering])
+
+  function revealOpacity(lane, id) {
+    if (animationStage < 0) return 0
+    const stages = {
+      'step-intake': 0,
+      'step-identity': 1,
+      'opt-out-suppress-marketings': 3,
+      'step-generate-response': 4,
+      'step-deliver': 5,
+    }
+    if (id && stages[id] !== undefined) return animationStage >= stages[id] ? 1 : 0
+    if (id === 'connector-step1-and-step2.svg') return animationStage >= 1 ? 1 : 0
+    if (id === 'connector-last-steps.svg') return animationStage >= 5 ? 1 : 0
+    if (lane === 'trunk') return animationStage >= 1 ? 1 : 0
+    if (lane === 'optout') return animationStage >= 2 ? 1 : 0
+    if (lane === 'access') return animationStage >= 6 ? 1 : 0
+    if (lane === 'deletion') return animationStage >= 7 ? 1 : 0
+    if (lane === 'correction') return animationStage >= 8 ? 1 : 0
+    return 1
+  }
 
   const hoveredCard = hovered ? CARDS.find((c) => c.id === hovered) : null
 
@@ -494,7 +526,7 @@ export function FlowChartScene() {
                 height: panel.h,
                 background: GROUP_BG,
                 borderRadius: 8,
-                opacity: laneDimmed(focus, panel.lane) ? 0.3 : 1,
+                opacity: laneDimmed(focus, panel.lane) ? 0.3 : revealOpacity(panel.lane),
                 transition: 'opacity 200ms var(--motion-ease, ease)',
               }}
             />
@@ -513,7 +545,7 @@ export function FlowChartScene() {
                 top: line.y,
                 width: line.w,
                 height: line.h,
-                opacity: laneDimmed(focus, line.lane) ? 0.2 : 1,
+                opacity: laneDimmed(focus, line.lane) ? 0.2 : revealOpacity(line.lane, line.src),
                 transition: 'opacity 200ms var(--motion-ease, ease)',
               }}
             />
@@ -546,7 +578,7 @@ export function FlowChartScene() {
                   color: CHIP_INK,
                   font: '600 14px/20px "Open Sans", sans-serif',
                   cursor: 'pointer',
-                  opacity: laneDimmed(focus, chip.lane) ? 0.3 : 1,
+                  opacity: laneDimmed(focus, chip.lane) ? 0.3 : revealOpacity(chip.lane),
                   transition: 'opacity 200ms var(--motion-ease, ease)',
                 }}
               >
@@ -560,6 +592,7 @@ export function FlowChartScene() {
               key={card.id}
               card={card}
               dimmed={laneDimmed(focus, card.lane)}
+              revealOpacity={revealOpacity(card.lane, card.id)}
               active={hovered === card.id}
               onHover={setHovered}
             />
@@ -673,7 +706,7 @@ function PageHeader() {
   )
 }
 
-function FlowCard({ card, dimmed, active, onHover, className }) {
+function FlowCard({ card, dimmed, revealOpacity = 1, active, onHover, className }) {
   const titleLines = card.title
   const subLines = card.sub || []
   const totalLines = titleLines.length + subLines.length
@@ -697,7 +730,7 @@ function FlowCard({ card, dimmed, active, onHover, className }) {
         background: SURFACE,
         border: `1px solid ${CARD_BORDER}`,
         borderRadius: 7,
-        opacity: dimmed ? 0.3 : 1,
+        opacity: dimmed ? 0.3 : revealOpacity,
         transition: 'opacity 200ms var(--motion-ease, ease), box-shadow 150ms var(--motion-ease, ease)',
         boxShadow: active && !dimmed ? '0 4px 12px rgba(26,26,26,0.14)' : 'none',
         zIndex: active ? 6 : 4,
