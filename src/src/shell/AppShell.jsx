@@ -116,11 +116,11 @@ function NavRail() {
 function Mark() {
   return (
     <img
-      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/OT_Privacy_Artifacts_and_research-ELu2lacTtcgnrsqELd6Wock9l05g2e.png"
-      alt="OneTrust"
-      width="153"
-      height="22"
-      style={{ display: 'block', width: 153, height: 22, objectFit: 'contain' }}
+src="/brand/ot-logo-lockup-white.svg"
+alt="OneTrust"
+width="153"
+height="21"
+style={{ display: 'block', width: 153, height: 21, objectFit: 'contain' }}
     />
   )
 }
